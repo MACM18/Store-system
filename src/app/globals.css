@@ -123,6 +123,7 @@
 .modal-form.inline-form>button{min-height:46px}
 .modal-form.form-stack{display:grid;gap:13px}
 .modal-form .searchable-select-control>input{height:40px!important}
+.account-setup-card{max-width:470px}.account-setup-mark{width:44px;height:44px;display:grid;place-items:center;margin-bottom:18px;border-radius:13px;background:#fff0e8;color:#b8492d;font-size:20px}.account-setup-recipient{display:flex;align-items:center;gap:7px;margin:-8px 0 20px;color:#6d796f;font-size:11px;overflow-wrap:anywhere}.account-setup-recipient svg{flex:none;color:#4c8ba5}.account-login-link{display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:18px}.password-reset-trigger{border:1px solid #eaded6;background:#fff;border-radius:7px;padding:6px 9px;font-size:9px;font-weight:700;cursor:pointer}.password-reset-trigger:hover{background:#fff6f1}.reset-confirm-copy{margin:0;color:#68736a;font-size:12px;line-height:1.65}.reset-confirm-copy strong{color:#40372f}
 @keyframes dialog-enter{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 .inventory-action-card{width:100%;min-height:78px;display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid #ebe3dd;border-radius:11px;background:#fff;text-align:left;color:#382c26;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
 .inventory-action-card:hover{transform:translateY(-1px);border-color:#e3b59f;box-shadow:0 6px 18px rgba(55,39,29,.07)}
@@ -294,5 +295,6 @@
   .product-card-mark{width:40px;height:40px}
   .product-card-identity h3{font-size:14px}
   .catalog-price-main{margin:13px 0 10px;padding:12px}
-  .catalog-price-main strong{font-size:23px}
+.catalog-price-main strong{font-size:23px}
 }
+@media(max-width:760px){.account-setup-card{padding:30px 24px}.account-setup-card h1{font-size:26px}.team-row .password-reset-trigger{margin-left:38px}}

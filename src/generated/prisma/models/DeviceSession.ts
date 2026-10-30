@@ -447,14 +447,6 @@ export type DeviceSessionUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.DeviceSessionScalarWhereInput | Prisma.DeviceSessionScalarWhereInput[]
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type DeviceSessionCreateWithoutUserInput = {
   id?: string
   tokenHash: string

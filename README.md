@@ -14,16 +14,20 @@ The first setup asks for the store name, ISO currency, store timezone, and owner
 
 ## Roles
 
-- **Owner:** Full access, team creation, and device-session revocation.
+- **Owner:** Full access, team invitations, password reset emails, and device-session revocation.
 - **Manager:** Products and prices, stock, cash movements, expenses, checkout, and reporting.
 - **Cashier:** Checkout, drawer opening and closing, and cash movements.
 
 Each signed-in device gets its own server-side session. Sessions expire after 14 days by default; set `SESSION_DAYS` between 1 and 60 to change that. Sessions use secure, HTTP-only cookies in production.
 
+## Team invitations and password resets
+
+Set `APP_URL` to the public app URL and configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` to enable email delivery. Invitations expire after 72 hours. Owner-triggered password reset links expire after one hour; setting a new password revokes that member’s existing device sessions. A failed email send invalidates its link and is reported in the owner team screen.
+
 ## Deployment to Dokploy
 
 1. Create a Dokploy application that deploys the GHCR image `ghcr.io/macm18/store-system:latest`. Enable auto-deploy from its webhook and configure the private GHCR registry credentials if the package is private.
-2. Configure `DATABASE_URL` to the PostgreSQL service reachable from the application container, `SESSION_DAYS` if desired, and `PORT=3000`.
+2. Configure `DATABASE_URL` to the database service reachable from the application container, `SESSION_DAYS` if desired, `PORT=3000`, `APP_URL=https://shop.macm.dev`, and the SMTP settings listed above.
 3. Add a GitHub Actions repository secret named `DOKPLOY_WEBHOOK_URL` containing the HTTPS deployment webhook URL.
 4. Push to `main` (or run the workflow manually). GitHub Actions builds and publishes the Docker image, then calls the checked-in Python webhook script.
 

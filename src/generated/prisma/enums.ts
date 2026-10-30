@@ -33,3 +33,11 @@ export const CashMovementKind = {
 } as const
 
 export type CashMovementKind = (typeof CashMovementKind)[keyof typeof CashMovementKind]
+
+
+export const AccountTokenType = {
+  INVITE: 'INVITE',
+  PASSWORD_RESET: 'PASSWORD_RESET'
+} as const
+
+export type AccountTokenType = (typeof AccountTokenType)[keyof typeof AccountTokenType]

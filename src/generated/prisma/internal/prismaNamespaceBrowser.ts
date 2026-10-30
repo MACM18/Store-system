@@ -54,6 +54,7 @@ export const ModelName = {
   SetupClaim: 'SetupClaim',
   Store: 'Store',
   User: 'User',
+  AccountToken: 'AccountToken',
   DeviceSession: 'DeviceSession',
   Product: 'Product',
   CashSession: 'CashSession',
@@ -114,6 +115,24 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const AccountTokenScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  userId: 'userId',
+  type: 'type',
+  email: 'email',
+  inviteName: 'inviteName',
+  inviteRole: 'inviteRole',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AccountTokenScalarFieldEnum = (typeof AccountTokenScalarFieldEnum)[keyof typeof AccountTokenScalarFieldEnum]
 
 
 export const DeviceSessionScalarFieldEnum = {

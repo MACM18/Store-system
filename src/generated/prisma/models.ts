@@ -11,6 +11,7 @@
 export type * from './models/SetupClaim.ts'
 export type * from './models/Store.ts'
 export type * from './models/User.ts'
+export type * from './models/AccountToken.ts'
 export type * from './models/DeviceSession.ts'
 export type * from './models/Product.ts'
 export type * from './models/CashSession.ts'

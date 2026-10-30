@@ -400,6 +400,7 @@ export const ModelName = {
   SetupClaim: 'SetupClaim',
   Store: 'Store',
   User: 'User',
+  AccountToken: 'AccountToken',
   DeviceSession: 'DeviceSession',
   Product: 'Product',
   CashSession: 'CashSession',
@@ -426,7 +427,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "setupClaim" | "store" | "user" | "deviceSession" | "product" | "cashSession" | "sale" | "saleItem" | "salePayment" | "expense" | "stockLot" | "cashMovement" | "stockAdjustment" | "auditEvent"
+    modelProps: "setupClaim" | "store" | "user" | "accountToken" | "deviceSession" | "product" | "cashSession" | "sale" | "saleItem" | "salePayment" | "expense" | "stockLot" | "cashMovement" | "stockAdjustment" | "auditEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -649,6 +650,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    AccountToken: {
+      payload: Prisma.$AccountTokenPayload<ExtArgs>
+      fields: Prisma.AccountTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AccountTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AccountTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.AccountTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AccountTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        findMany: {
+          args: Prisma.AccountTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>[]
+        }
+        create: {
+          args: Prisma.AccountTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        createMany: {
+          args: Prisma.AccountTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AccountTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.AccountTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        update: {
+          args: Prisma.AccountTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.AccountTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AccountTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AccountTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.AccountTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AccountTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.AccountTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAccountToken>
+        }
+        groupBy: {
+          args: Prisma.AccountTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AccountTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AccountTokenCountAggregateOutputType> | number
         }
       }
     }
@@ -1538,6 +1613,24 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const AccountTokenScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  userId: 'userId',
+  type: 'type',
+  email: 'email',
+  inviteName: 'inviteName',
+  inviteRole: 'inviteRole',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type AccountTokenScalarFieldEnum = (typeof AccountTokenScalarFieldEnum)[keyof typeof AccountTokenScalarFieldEnum]
+
+
 export const DeviceSessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1803,6 +1896,20 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'AccountTokenType'
+ */
+export type EnumAccountTokenTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountTokenType'>
+
+
+
+/**
+ * Reference to a field of type 'AccountTokenType[]'
+ */
+export type ListEnumAccountTokenTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountTokenType[]'>
+
+
+
+/**
  * Reference to a field of type 'PaymentMethod'
  */
 export type EnumPaymentMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMethod'>
@@ -2011,6 +2118,7 @@ export type GlobalOmitConfig = {
   setupClaim?: Prisma.SetupClaimOmit
   store?: Prisma.StoreOmit
   user?: Prisma.UserOmit
+  accountToken?: Prisma.AccountTokenOmit
   deviceSession?: Prisma.DeviceSessionOmit
   product?: Prisma.ProductOmit
   cashSession?: Prisma.CashSessionOmit
@@ -2084,4 +2192,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

@@ -189,6 +189,7 @@ export type StoreWhereInput = {
   expenses?: Prisma.ExpenseListRelationFilter
   movements?: Prisma.CashMovementListRelationFilter
   audit?: Prisma.AuditEventListRelationFilter
+  accountTokens?: Prisma.AccountTokenListRelationFilter
 }
 
 export type StoreOrderByWithRelationInput = {
@@ -204,6 +205,7 @@ export type StoreOrderByWithRelationInput = {
   expenses?: Prisma.ExpenseOrderByRelationAggregateInput
   movements?: Prisma.CashMovementOrderByRelationAggregateInput
   audit?: Prisma.AuditEventOrderByRelationAggregateInput
+  accountTokens?: Prisma.AccountTokenOrderByRelationAggregateInput
 }
 
 export type StoreWhereUniqueInput = Prisma.AtLeast<{
@@ -222,6 +224,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   expenses?: Prisma.ExpenseListRelationFilter
   movements?: Prisma.CashMovementListRelationFilter
   audit?: Prisma.AuditEventListRelationFilter
+  accountTokens?: Prisma.AccountTokenListRelationFilter
 }, "id">
 
 export type StoreOrderByWithAggregationInput = {
@@ -259,6 +262,7 @@ export type StoreCreateInput = {
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateInput = {
@@ -274,6 +278,7 @@ export type StoreUncheckedCreateInput = {
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUpdateInput = {
@@ -289,6 +294,7 @@ export type StoreUpdateInput = {
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateInput = {
@@ -304,6 +310,7 @@ export type StoreUncheckedUpdateInput = {
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyInput = {
@@ -375,6 +382,20 @@ export type StoreUpdateOneRequiredWithoutUsersNestedInput = {
   upsert?: Prisma.StoreUpsertWithoutUsersInput
   connect?: Prisma.StoreWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutUsersInput, Prisma.StoreUpdateWithoutUsersInput>, Prisma.StoreUncheckedUpdateWithoutUsersInput>
+}
+
+export type StoreCreateNestedOneWithoutAccountTokensInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAccountTokensInput, Prisma.StoreUncheckedCreateWithoutAccountTokensInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAccountTokensInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutAccountTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAccountTokensInput, Prisma.StoreUncheckedCreateWithoutAccountTokensInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAccountTokensInput
+  upsert?: Prisma.StoreUpsertWithoutAccountTokensInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutAccountTokensInput, Prisma.StoreUpdateWithoutAccountTokensInput>, Prisma.StoreUncheckedUpdateWithoutAccountTokensInput>
 }
 
 export type StoreCreateNestedOneWithoutProductsInput = {
@@ -473,6 +494,7 @@ export type StoreCreateWithoutUsersInput = {
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutUsersInput = {
@@ -487,6 +509,7 @@ export type StoreUncheckedCreateWithoutUsersInput = {
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutUsersInput = {
@@ -517,6 +540,7 @@ export type StoreUpdateWithoutUsersInput = {
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutUsersInput = {
@@ -525,6 +549,83 @@ export type StoreUncheckedUpdateWithoutUsersInput = {
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  sessions?: Prisma.CashSessionUncheckedUpdateManyWithoutStoreNestedInput
+  sales?: Prisma.SaleUncheckedUpdateManyWithoutStoreNestedInput
+  expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
+  movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
+  audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutAccountTokensInput = {
+  id?: string
+  name: string
+  currency?: string
+  timezone?: string
+  createdAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  sessions?: Prisma.CashSessionCreateNestedManyWithoutStoreInput
+  sales?: Prisma.SaleCreateNestedManyWithoutStoreInput
+  expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
+  movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
+  audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutAccountTokensInput = {
+  id?: string
+  name: string
+  currency?: string
+  timezone?: string
+  createdAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  sessions?: Prisma.CashSessionUncheckedCreateNestedManyWithoutStoreInput
+  sales?: Prisma.SaleUncheckedCreateNestedManyWithoutStoreInput
+  expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
+  movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
+  audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutAccountTokensInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAccountTokensInput, Prisma.StoreUncheckedCreateWithoutAccountTokensInput>
+}
+
+export type StoreUpsertWithoutAccountTokensInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutAccountTokensInput, Prisma.StoreUncheckedUpdateWithoutAccountTokensInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAccountTokensInput, Prisma.StoreUncheckedCreateWithoutAccountTokensInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutAccountTokensInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutAccountTokensInput, Prisma.StoreUncheckedUpdateWithoutAccountTokensInput>
+}
+
+export type StoreUpdateWithoutAccountTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  sessions?: Prisma.CashSessionUpdateManyWithoutStoreNestedInput
+  sales?: Prisma.SaleUpdateManyWithoutStoreNestedInput
+  expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
+  movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
+  audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutAccountTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   sessions?: Prisma.CashSessionUncheckedUpdateManyWithoutStoreNestedInput
   sales?: Prisma.SaleUncheckedUpdateManyWithoutStoreNestedInput
@@ -545,6 +646,7 @@ export type StoreCreateWithoutProductsInput = {
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductsInput = {
@@ -559,6 +661,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductsInput = {
@@ -589,6 +692,7 @@ export type StoreUpdateWithoutProductsInput = {
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductsInput = {
@@ -603,6 +707,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutSessionsInput = {
@@ -617,6 +722,7 @@ export type StoreCreateWithoutSessionsInput = {
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutSessionsInput = {
@@ -631,6 +737,7 @@ export type StoreUncheckedCreateWithoutSessionsInput = {
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutSessionsInput = {
@@ -661,6 +768,7 @@ export type StoreUpdateWithoutSessionsInput = {
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutSessionsInput = {
@@ -675,6 +783,7 @@ export type StoreUncheckedUpdateWithoutSessionsInput = {
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutSalesInput = {
@@ -689,6 +798,7 @@ export type StoreCreateWithoutSalesInput = {
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutSalesInput = {
@@ -703,6 +813,7 @@ export type StoreUncheckedCreateWithoutSalesInput = {
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutSalesInput = {
@@ -733,6 +844,7 @@ export type StoreUpdateWithoutSalesInput = {
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutSalesInput = {
@@ -747,6 +859,7 @@ export type StoreUncheckedUpdateWithoutSalesInput = {
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutExpensesInput = {
@@ -761,6 +874,7 @@ export type StoreCreateWithoutExpensesInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutExpensesInput = {
@@ -775,6 +889,7 @@ export type StoreUncheckedCreateWithoutExpensesInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutExpensesInput = {
@@ -805,6 +920,7 @@ export type StoreUpdateWithoutExpensesInput = {
   sales?: Prisma.SaleUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutExpensesInput = {
@@ -819,6 +935,7 @@ export type StoreUncheckedUpdateWithoutExpensesInput = {
   sales?: Prisma.SaleUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutMovementsInput = {
@@ -833,6 +950,7 @@ export type StoreCreateWithoutMovementsInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutStoreInput
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutMovementsInput = {
@@ -847,6 +965,7 @@ export type StoreUncheckedCreateWithoutMovementsInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutStoreInput
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutMovementsInput = {
@@ -877,6 +996,7 @@ export type StoreUpdateWithoutMovementsInput = {
   sales?: Prisma.SaleUpdateManyWithoutStoreNestedInput
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutMovementsInput = {
@@ -891,6 +1011,7 @@ export type StoreUncheckedUpdateWithoutMovementsInput = {
   sales?: Prisma.SaleUncheckedUpdateManyWithoutStoreNestedInput
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutAuditInput = {
@@ -905,6 +1026,7 @@ export type StoreCreateWithoutAuditInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutStoreInput
   expenses?: Prisma.ExpenseCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutAuditInput = {
@@ -919,6 +1041,7 @@ export type StoreUncheckedCreateWithoutAuditInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutStoreInput
   expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutStoreInput
   movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutStoreInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutAuditInput = {
@@ -949,6 +1072,7 @@ export type StoreUpdateWithoutAuditInput = {
   sales?: Prisma.SaleUpdateManyWithoutStoreNestedInput
   expenses?: Prisma.ExpenseUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutAuditInput = {
@@ -963,6 +1087,7 @@ export type StoreUncheckedUpdateWithoutAuditInput = {
   sales?: Prisma.SaleUncheckedUpdateManyWithoutStoreNestedInput
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutStoreNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutStoreNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 
@@ -978,6 +1103,7 @@ export type StoreCountOutputType = {
   expenses: number
   movements: number
   audit: number
+  accountTokens: number
 }
 
 export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -988,6 +1114,7 @@ export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   expenses?: boolean | StoreCountOutputTypeCountExpensesArgs
   movements?: boolean | StoreCountOutputTypeCountMovementsArgs
   audit?: boolean | StoreCountOutputTypeCountAuditArgs
+  accountTokens?: boolean | StoreCountOutputTypeCountAccountTokensArgs
 }
 
 /**
@@ -1049,6 +1176,13 @@ export type StoreCountOutputTypeCountAuditArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.AuditEventWhereInput
 }
 
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountAccountTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AccountTokenWhereInput
+}
+
 
 export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1063,6 +1197,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   expenses?: boolean | Prisma.Store$expensesArgs<ExtArgs>
   movements?: boolean | Prisma.Store$movementsArgs<ExtArgs>
   audit?: boolean | Prisma.Store$auditArgs<ExtArgs>
+  accountTokens?: boolean | Prisma.Store$accountTokensArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["store"]>
 
@@ -1099,6 +1234,7 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   expenses?: boolean | Prisma.Store$expensesArgs<ExtArgs>
   movements?: boolean | Prisma.Store$movementsArgs<ExtArgs>
   audit?: boolean | Prisma.Store$auditArgs<ExtArgs>
+  accountTokens?: boolean | Prisma.Store$accountTokensArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StoreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1114,6 +1250,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     expenses: Prisma.$ExpensePayload<ExtArgs>[]
     movements: Prisma.$CashMovementPayload<ExtArgs>[]
     audit: Prisma.$AuditEventPayload<ExtArgs>[]
+    accountTokens: Prisma.$AccountTokenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1522,6 +1659,7 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   expenses<T extends Prisma.Store$expensesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$expensesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ExpensePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   movements<T extends Prisma.Store$movementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$movementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   audit<T extends Prisma.Store$auditArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$auditArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  accountTokens<T extends Prisma.Store$accountTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$accountTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2114,6 +2252,30 @@ export type Store$auditArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.AuditEventScalarFieldEnum | Prisma.AuditEventScalarFieldEnum[]
+}
+
+/**
+ * Store.accountTokens
+ */
+export type Store$accountTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AccountToken
+   */
+  select?: Prisma.AccountTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AccountToken
+   */
+  omit?: Prisma.AccountTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AccountTokenInclude<ExtArgs> | null
+  where?: Prisma.AccountTokenWhereInput
+  orderBy?: Prisma.AccountTokenOrderByWithRelationInput | Prisma.AccountTokenOrderByWithRelationInput[]
+  cursor?: Prisma.AccountTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AccountTokenScalarFieldEnum | Prisma.AccountTokenScalarFieldEnum[]
 }
 
 /**

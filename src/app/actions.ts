@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createHash, randomBytes } from "node:crypto";
 import { hashPassword, verifyPassword, createDeviceSession, requireRole, endCurrentSession } from "@/lib/auth";
 import { businessDate } from "@/lib/dates";
 import { expectedDrawerCash, paymentTotalMatches } from "@/lib/accounting";
 import { planFifoConsumption } from "@/lib/inventory";
 import { parseMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { sendAccountEmail } from "@/lib/mailer";
 
 const text = (form: FormData, key: string, max = 200) => Array.from(String(form.get(key) ?? "").normalize("NFC").trim()).slice(0, max).join("");
 const integer = (form: FormData, key: string) => {
@@ -275,17 +277,108 @@ async function ensureOpenCashDay(tx: TransactionClient, storeId: string, timezon
   return day;
 }
 
-export async function createStaffUser(form: FormData) {
+const INVITE_VALIDITY_HOURS = 72;
+const RESET_VALIDITY_MINUTES = 60;
+const accountTokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
+
+function accountLink(token: string) {
+  const configuredUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL;
+  if (!configuredUrl) throw new Error("APP_URL is not configured");
+  const url = new URL("/account/setup", configuredUrl);
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
+export async function inviteStaffUser(form: FormData) {
   const session = await requireRole("OWNER");
   const name = text(form, "name", 100);
   const email = text(form, "email", 254).toLowerCase();
   const role = text(form, "role", 10);
-  const password = String(form.get("password") ?? "");
-  if (!name || !/^\S+@\S+\.\S+$/.test(email) || (role !== "MANAGER" && role !== "CASHIER") || password.length < 12) redirect("/?section=settings&error=user");
-  try { await prisma.user.create({ data: { storeId: session.user.storeId, name, email, role, passwordHash: await hashPassword(password) } }); }
-  catch { redirect("/?section=settings&error=email"); }
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || (role !== "MANAGER" && role !== "CASHIER")) redirect("/?section=settings&error=user");
+  if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) redirect("/?section=settings&error=email");
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + INVITE_VALIDITY_HOURS * 60 * 60 * 1000);
+  const invite = await prisma.accountToken.create({ data: {
+    storeId: session.user.storeId,
+    email,
+    inviteName: name,
+    inviteRole: role,
+    type: "INVITE",
+    tokenHash: accountTokenHash(token),
+    expiresAt,
+    createdById: session.userId,
+  } });
+  try {
+    await sendAccountEmail({ to: email, recipientName: name, storeName: session.user.store.name, link: accountLink(token), kind: "invite", validFor: "72 hours" });
+  } catch {
+    await prisma.accountToken.update({ where: { id: invite.id }, data: { usedAt: new Date() } });
+    redirect("/?section=settings&error=invite-email");
+  }
+  await prisma.accountToken.updateMany({ where: { id: { not: invite.id }, storeId: session.user.storeId, email, type: "INVITE", usedAt: null }, data: { usedAt: new Date() } });
   revalidatePath("/");
-  redirect("/?section=settings&success=user");
+  redirect("/?section=settings&success=invite");
+}
+
+export async function sendStaffPasswordReset(form: FormData) {
+  const session = await requireRole("OWNER");
+  const userId = text(form, "userId", 40);
+  if (!userId || userId === session.userId) redirect("/?section=settings&error=reset-user");
+  const user = await prisma.user.findFirst({ where: { id: userId, storeId: session.user.storeId, active: true }, include: { store: true } });
+  if (!user) redirect("/?section=settings&error=reset-user");
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + RESET_VALIDITY_MINUTES * 60 * 1000);
+  const reset = await prisma.accountToken.create({ data: {
+    storeId: user.storeId,
+    userId: user.id,
+    email: user.email,
+    type: "PASSWORD_RESET",
+    tokenHash: accountTokenHash(token),
+    expiresAt,
+    createdById: session.userId,
+  } });
+  try {
+    await sendAccountEmail({ to: user.email, recipientName: user.name, storeName: user.store.name, link: accountLink(token), kind: "password-reset", validFor: "1 hour" });
+  } catch {
+    await prisma.accountToken.update({ where: { id: reset.id }, data: { usedAt: new Date() } });
+    redirect("/?section=settings&error=reset-email");
+  }
+  await prisma.accountToken.updateMany({ where: { id: { not: reset.id }, userId: user.id, type: "PASSWORD_RESET", usedAt: null }, data: { usedAt: new Date() } });
+  revalidatePath("/");
+  redirect("/?section=settings&success=reset-sent");
+}
+
+export async function finishAccountSetup(form: FormData) {
+  const token = String(form.get("token") ?? "");
+  const password = String(form.get("password") ?? "");
+  const confirmPassword = String(form.get("confirmPassword") ?? "");
+  if (!/^[A-Za-z0-9_-]{40,50}$/.test(token)) redirect("/account/setup?error=invalid");
+  if (password.length < 12) redirect(`/account/setup?token=${encodeURIComponent(token)}&error=password`);
+  if (password !== confirmPassword) redirect(`/account/setup?token=${encodeURIComponent(token)}&error=match`);
+  const tokenHash = accountTokenHash(token);
+  const now = new Date();
+  const passwordHash = await hashPassword(password);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const accountToken = await tx.accountToken.findUnique({ where: { tokenHash } });
+      if (!accountToken || accountToken.usedAt || accountToken.expiresAt <= now) throw new Error("Account link is invalid or expired");
+      const claimed = await tx.accountToken.updateMany({ where: { id: accountToken.id, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
+      if (claimed.count !== 1) throw new Error("Account link was already used");
+
+      if (accountToken.type === "INVITE") {
+        if (!accountToken.inviteName || (accountToken.inviteRole !== "MANAGER" && accountToken.inviteRole !== "CASHIER")) throw new Error("Invitation is incomplete");
+        await tx.user.create({ data: { storeId: accountToken.storeId, name: accountToken.inviteName, email: accountToken.email, role: accountToken.inviteRole, passwordHash } });
+        await tx.accountToken.updateMany({ where: { storeId: accountToken.storeId, email: accountToken.email, type: "INVITE", usedAt: null }, data: { usedAt: now } });
+      } else {
+        if (!accountToken.userId) throw new Error("Password reset is invalid");
+        await tx.user.update({ where: { id: accountToken.userId }, data: { passwordHash } });
+        await tx.deviceSession.updateMany({ where: { userId: accountToken.userId, revokedAt: null }, data: { revokedAt: now } });
+        await tx.accountToken.updateMany({ where: { userId: accountToken.userId, type: "PASSWORD_RESET", usedAt: null }, data: { usedAt: now } });
+      }
+    }, { isolationLevel: "Serializable" });
+  } catch {
+    redirect("/account/setup?error=expired");
+  }
+  redirect("/login?success=password-set");
 }
 
 export async function updateStoreSettings(form: FormData) {

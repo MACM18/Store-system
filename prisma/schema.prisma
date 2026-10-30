@@ -24,6 +24,11 @@ enum CashMovementKind {
   CASH_OUT
 }
 
+enum AccountTokenType {
+  INVITE
+  PASSWORD_RESET
+}
+
 model SetupClaim {
   id        Int      @id
   createdAt DateTime @default(now())
@@ -42,6 +47,7 @@ model Store {
   expenses  Expense[]
   movements CashMovement[]
   audit     AuditEvent[]
+  accountTokens AccountToken[]
 }
 
 model User {
@@ -63,6 +69,27 @@ model User {
   adjustments   StockAdjustment[]
   stockLots     StockLot[]
   audit         AuditEvent[]
+  accountTokens AccountToken[]
+}
+
+model AccountToken {
+  id          String           @id @default(cuid())
+  storeId     String
+  store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        AccountTokenType
+  email       String
+  inviteName  String?
+  inviteRole  Role?
+  tokenHash   String           @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String?
+  createdAt   DateTime         @default(now())
+
+  @@index([email, type, usedAt])
+  @@index([userId, type, usedAt])
 }
 
 model DeviceSession {
