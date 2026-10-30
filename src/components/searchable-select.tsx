@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { CSSProperties, useEffect, useId, useMemo, useRef, useState } from "react";
 import { FiChevronDown, FiSearch } from "react-icons/fi";
 
 type Option = { value: string; label: string };
@@ -23,6 +23,7 @@ export function SearchableSelect({ name, options, defaultValue = "", placeholder
   const selectedValueRef = useRef(defaultValue);
   const [query, setQuery] = useState(initialOption?.label ?? "");
   const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<CSSProperties>();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const normalizedQuery = query.normalize("NFC").toLocaleLowerCase();
@@ -35,6 +36,30 @@ export function SearchableSelect({ name, options, defaultValue = "", placeholder
     document.addEventListener("pointerdown", closeOnOutsideClick);
     return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (!open || !rootRef.current) return;
+    const positionMenu = () => {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const below = Math.max(90, viewportHeight - rect.bottom - 12);
+      const above = Math.max(90, rect.top - 12);
+      const openAbove = below < 170 && above > below;
+      setMenuPosition({ position: "fixed", left: rect.left, width: rect.width, maxHeight: Math.min(240, openAbove ? above : below), ...(openAbove ? { top: "auto", bottom: viewportHeight - rect.top + 5 } : { top: rect.bottom + 5, bottom: "auto" }) });
+    };
+    positionMenu();
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    window.visualViewport?.addEventListener("resize", positionMenu);
+    window.visualViewport?.addEventListener("scroll", positionMenu);
+    return () => {
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+      window.visualViewport?.removeEventListener("resize", positionMenu);
+      window.visualViewport?.removeEventListener("scroll", positionMenu);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!required || !rootRef.current) return;
@@ -93,7 +118,7 @@ export function SearchableSelect({ name, options, defaultValue = "", placeholder
       />
       <FiChevronDown aria-hidden="true" className="searchable-select-chevron" />
     </div>
-    {open && !disabled && <div className="searchable-select-menu" id={listboxId} role="listbox">
+    {open && !disabled && <div className="searchable-select-menu" id={listboxId} role="listbox" style={menuPosition}>
       {matches.length ? matches.map((option) => <button type="button" role="option" aria-selected={selectedValue === option.value} className={selectedValue === option.value ? "selected" : ""} key={option.value} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(option)}>{option.label}</button>) : <div className="searchable-select-empty">No matching items</div>}
     </div>}
     <span className="searchable-select-sr-label">{searchPlaceholder}</span>
