@@ -58,6 +58,16 @@ export type CashSession = Prisma.CashSessionModel
  */
 export type Sale = Prisma.SaleModel
 /**
+ * Model Customer
+ *
+ */
+export type Customer = Prisma.CustomerModel
+/**
+ * Model DebtPayment
+ *
+ */
+export type DebtPayment = Prisma.DebtPaymentModel
+/**
  * Model SaleItem
  * 
  */

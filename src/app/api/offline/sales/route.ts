@@ -15,6 +15,7 @@ type SalePayload = {
   createdAt: string;
   lines: Array<{ productId: string; name: string; priceCents: number; quantity: number }>;
   payments: { cash: number; card: number; bank: number };
+  credit?: { customerName: string; customerPhone?: string };
 };
 
 class OfflineSaleConflict extends Error {}
@@ -48,6 +49,10 @@ export async function POST(request: Request) {
     { method: "BANK" as const, amountCents: payload.payments?.bank },
   ];
   if (paymentRows.some((payment) => !Number.isSafeInteger(payment.amountCents) || payment.amountCents < 0)) return invalid("Payment totals are not valid.");
+  const customerName = typeof payload.credit?.customerName === "string" ? payload.credit.customerName.normalize("NFC").trim().slice(0, 100) : "";
+  const customerPhone = typeof payload.credit?.customerPhone === "string" ? payload.credit.customerPhone.trim().slice(0, 32) : "";
+  const onCredit = payload.credit !== undefined;
+  if (onCredit && !customerName) return invalid("Enter the customer’s name for a credit sale.");
   const storeId = session.user.storeId;
   const cashierId = session.userId;
   const date = businessDate(session.user.store.timezone, occurredAt);
@@ -68,8 +73,14 @@ export async function POST(request: Request) {
         return { product, quantity: saved.quantity };
       });
       const total = lines.reduce((sum, line) => sum + line.product.priceCents * line.quantity, 0);
-      if (!paymentTotalMatches(total, paymentRows.map((payment) => payment.amountCents))) throw new OfflineSaleConflict("The saved payment breakdown does not match this sale.");
-      const sale = await tx.sale.create({ data: { storeId, cashierId, totalCents: total, businessDate: date, offlineId: payload.id, createdAt: occurredAt } });
+      if (onCredit ? paymentRows.some((payment) => payment.amountCents !== 0) : !paymentTotalMatches(total, paymentRows.map((payment) => payment.amountCents))) throw new OfflineSaleConflict("The saved payment breakdown does not match this sale.");
+      let customerId: string | undefined;
+      if (onCredit) {
+        const existingCustomer = await tx.customer.findFirst({ where: { storeId, ...(customerPhone ? { phone: customerPhone } : { name: { equals: customerName, mode: "insensitive" } }) }, orderBy: { createdAt: "asc" } });
+        const customer = existingCustomer ?? await tx.customer.create({ data: { storeId, name: customerName, phone: customerPhone || null } });
+        customerId = customer.id;
+      }
+      const sale = await tx.sale.create({ data: { storeId, cashierId, customerId, creditCents: onCredit ? total : 0, totalCents: total, businessDate: date, offlineId: payload.id, createdAt: occurredAt } });
       for (const { product, quantity } of lines) {
         const changed = await tx.product.updateMany({ where: { id: product.id, stock: { gte: quantity } }, data: { stock: { decrement: quantity } } });
         if (!changed.count) throw new OfflineSaleConflict(`${product.name} no longer has enough stock. Review this saved sale with a manager.`);
@@ -83,8 +94,8 @@ export async function POST(request: Request) {
         }
         await tx.saleItem.create({ data: { saleId: sale.id, productId: product.id, productName: product.name, quantity, unitPriceCents: product.priceCents, unitCostCents: Math.round(plan.totalCostCents / quantity), lineCostCents: plan.totalCostCents, lineTotalCents: product.priceCents * quantity } });
       }
-      await tx.salePayment.createMany({ data: paymentRows.filter((payment) => payment.amountCents > 0).map((payment) => ({ saleId: sale.id, ...payment })) });
-      await tx.auditEvent.create({ data: { storeId, actorId: cashierId, action: "SALE_COMPLETED_OFFLINE", metadata: { saleId: sale.id, offlineId: payload.id, total, syncedAt: now.toISOString() } } });
+      if (!onCredit) await tx.salePayment.createMany({ data: paymentRows.filter((payment) => payment.amountCents > 0).map((payment) => ({ saleId: sale.id, ...payment })) });
+      await tx.auditEvent.create({ data: { storeId, actorId: cashierId, action: onCredit ? "CREDIT_SALE_COMPLETED" : "SALE_COMPLETED_OFFLINE", metadata: { saleId: sale.id, offlineId: payload.id, total, customerId, syncedAt: now.toISOString() } } });
       return { saleId: sale.id, duplicate: false };
     }, { isolationLevel: "Serializable" });
     revalidatePath("/");

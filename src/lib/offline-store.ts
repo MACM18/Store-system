@@ -17,6 +17,7 @@ export type OfflineSale = {
   businessDate: string;
   lines: Array<{ productId: string; name: string; priceCents: number; quantity: number }>;
   payments: { cash: number; card: number; bank: number };
+  credit?: { customerName: string; customerPhone: string };
   state: "queued" | "synced" | "conflict";
   error?: string;
 };

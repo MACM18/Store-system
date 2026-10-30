@@ -381,10 +381,6 @@ export type SalePaymentUncheckedUpdateManyWithoutSaleNestedInput = {
   deleteMany?: Prisma.SalePaymentScalarWhereInput | Prisma.SalePaymentScalarWhereInput[]
 }
 
-export type EnumPaymentMethodFieldUpdateOperationsInput = {
-  set?: $Enums.PaymentMethod
-}
-
 export type SalePaymentCreateWithoutSaleInput = {
   id?: string
   method: $Enums.PaymentMethod

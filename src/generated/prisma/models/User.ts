@@ -217,6 +217,7 @@ export type UserWhereInput = {
   stockLots?: Prisma.StockLotListRelationFilter
   audit?: Prisma.AuditEventListRelationFilter
   accountTokens?: Prisma.AccountTokenListRelationFilter
+  createdDebtPayments?: Prisma.DebtPaymentListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -239,6 +240,7 @@ export type UserOrderByWithRelationInput = {
   stockLots?: Prisma.StockLotOrderByRelationAggregateInput
   audit?: Prisma.AuditEventOrderByRelationAggregateInput
   accountTokens?: Prisma.AccountTokenOrderByRelationAggregateInput
+  createdDebtPayments?: Prisma.DebtPaymentOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -264,6 +266,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   stockLots?: Prisma.StockLotListRelationFilter
   audit?: Prisma.AuditEventListRelationFilter
   accountTokens?: Prisma.AccountTokenListRelationFilter
+  createdDebtPayments?: Prisma.DebtPaymentListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -313,6 +316,7 @@ export type UserCreateInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -334,6 +338,7 @@ export type UserUncheckedCreateInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -355,6 +360,7 @@ export type UserUpdateInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -376,6 +382,7 @@ export type UserUncheckedUpdateInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -587,6 +594,20 @@ export type UserUpdateOneRequiredWithoutSalesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSalesInput, Prisma.UserUpdateWithoutSalesInput>, Prisma.UserUncheckedUpdateWithoutSalesInput>
 }
 
+export type UserCreateNestedOneWithoutCreatedDebtPaymentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedCreateWithoutCreatedDebtPaymentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedDebtPaymentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCreatedDebtPaymentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedCreateWithoutCreatedDebtPaymentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedDebtPaymentsInput
+  upsert?: Prisma.UserUpsertWithoutCreatedDebtPaymentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedDebtPaymentsInput, Prisma.UserUpdateWithoutCreatedDebtPaymentsInput>, Prisma.UserUncheckedUpdateWithoutCreatedDebtPaymentsInput>
+}
+
 export type UserCreateNestedOneWithoutExpensesInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutExpensesInput, Prisma.UserUncheckedCreateWithoutExpensesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutExpensesInput
@@ -677,6 +698,7 @@ export type UserCreateWithoutStoreInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutStoreInput = {
@@ -697,6 +719,7 @@ export type UserUncheckedCreateWithoutStoreInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutStoreInput = {
@@ -757,6 +780,7 @@ export type UserCreateWithoutAccountTokensInput = {
   adjustments?: Prisma.StockAdjustmentCreateNestedManyWithoutUserInput
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAccountTokensInput = {
@@ -777,6 +801,7 @@ export type UserUncheckedCreateWithoutAccountTokensInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedCreateNestedManyWithoutUserInput
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAccountTokensInput = {
@@ -813,6 +838,7 @@ export type UserUpdateWithoutAccountTokensInput = {
   adjustments?: Prisma.StockAdjustmentUpdateManyWithoutUserNestedInput
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountTokensInput = {
@@ -833,6 +859,7 @@ export type UserUncheckedUpdateWithoutAccountTokensInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedUpdateManyWithoutUserNestedInput
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -853,6 +880,7 @@ export type UserCreateWithoutSessionsInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -873,6 +901,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -909,6 +938,7 @@ export type UserUpdateWithoutSessionsInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -929,6 +959,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCashSessionsInput = {
@@ -949,6 +980,7 @@ export type UserCreateWithoutCashSessionsInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCashSessionsInput = {
@@ -969,6 +1001,7 @@ export type UserUncheckedCreateWithoutCashSessionsInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCashSessionsInput = {
@@ -994,6 +1027,7 @@ export type UserCreateWithoutClosedDaysInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutClosedDaysInput = {
@@ -1014,6 +1048,7 @@ export type UserUncheckedCreateWithoutClosedDaysInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutClosedDaysInput = {
@@ -1050,6 +1085,7 @@ export type UserUpdateWithoutCashSessionsInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCashSessionsInput = {
@@ -1070,6 +1106,7 @@ export type UserUncheckedUpdateWithoutCashSessionsInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutClosedDaysInput = {
@@ -1101,6 +1138,7 @@ export type UserUpdateWithoutClosedDaysInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClosedDaysInput = {
@@ -1121,6 +1159,7 @@ export type UserUncheckedUpdateWithoutClosedDaysInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutSalesInput = {
@@ -1141,6 +1180,7 @@ export type UserCreateWithoutSalesInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutSalesInput = {
@@ -1161,6 +1201,7 @@ export type UserUncheckedCreateWithoutSalesInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutSalesInput = {
@@ -1197,6 +1238,7 @@ export type UserUpdateWithoutSalesInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSalesInput = {
@@ -1211,6 +1253,107 @@ export type UserUncheckedUpdateWithoutSalesInput = {
   sessions?: Prisma.DeviceSessionUncheckedUpdateManyWithoutUserNestedInput
   cashSessions?: Prisma.CashSessionUncheckedUpdateManyWithoutOpenedByNestedInput
   closedDays?: Prisma.CashSessionUncheckedUpdateManyWithoutClosedByNestedInput
+  expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutCreatedByNestedInput
+  movements?: Prisma.CashMovementUncheckedUpdateManyWithoutCreatedByNestedInput
+  adjustments?: Prisma.StockAdjustmentUncheckedUpdateManyWithoutUserNestedInput
+  stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
+  audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
+  accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserCreateWithoutCreatedDebtPaymentsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  role: $Enums.Role
+  active?: boolean
+  createdAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutUsersInput
+  sessions?: Prisma.DeviceSessionCreateNestedManyWithoutUserInput
+  cashSessions?: Prisma.CashSessionCreateNestedManyWithoutOpenedByInput
+  closedDays?: Prisma.CashSessionCreateNestedManyWithoutClosedByInput
+  sales?: Prisma.SaleCreateNestedManyWithoutCashierInput
+  expenses?: Prisma.ExpenseCreateNestedManyWithoutCreatedByInput
+  movements?: Prisma.CashMovementCreateNestedManyWithoutCreatedByInput
+  adjustments?: Prisma.StockAdjustmentCreateNestedManyWithoutUserInput
+  stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
+  audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
+  accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCreatedDebtPaymentsInput = {
+  id?: string
+  storeId: string
+  name: string
+  email: string
+  passwordHash: string
+  role: $Enums.Role
+  active?: boolean
+  createdAt?: Date | string
+  sessions?: Prisma.DeviceSessionUncheckedCreateNestedManyWithoutUserInput
+  cashSessions?: Prisma.CashSessionUncheckedCreateNestedManyWithoutOpenedByInput
+  closedDays?: Prisma.CashSessionUncheckedCreateNestedManyWithoutClosedByInput
+  sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCashierInput
+  expenses?: Prisma.ExpenseUncheckedCreateNestedManyWithoutCreatedByInput
+  movements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCreatedByInput
+  adjustments?: Prisma.StockAdjustmentUncheckedCreateNestedManyWithoutUserInput
+  stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
+  audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
+  accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCreatedDebtPaymentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedCreateWithoutCreatedDebtPaymentsInput>
+}
+
+export type UserUpsertWithoutCreatedDebtPaymentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedUpdateWithoutCreatedDebtPaymentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedCreateWithoutCreatedDebtPaymentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCreatedDebtPaymentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatedDebtPaymentsInput, Prisma.UserUncheckedUpdateWithoutCreatedDebtPaymentsInput>
+}
+
+export type UserUpdateWithoutCreatedDebtPaymentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutUsersNestedInput
+  sessions?: Prisma.DeviceSessionUpdateManyWithoutUserNestedInput
+  cashSessions?: Prisma.CashSessionUpdateManyWithoutOpenedByNestedInput
+  closedDays?: Prisma.CashSessionUpdateManyWithoutClosedByNestedInput
+  sales?: Prisma.SaleUpdateManyWithoutCashierNestedInput
+  expenses?: Prisma.ExpenseUpdateManyWithoutCreatedByNestedInput
+  movements?: Prisma.CashMovementUpdateManyWithoutCreatedByNestedInput
+  adjustments?: Prisma.StockAdjustmentUpdateManyWithoutUserNestedInput
+  stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
+  audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
+  accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCreatedDebtPaymentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.DeviceSessionUncheckedUpdateManyWithoutUserNestedInput
+  cashSessions?: Prisma.CashSessionUncheckedUpdateManyWithoutOpenedByNestedInput
+  closedDays?: Prisma.CashSessionUncheckedUpdateManyWithoutClosedByNestedInput
+  sales?: Prisma.SaleUncheckedUpdateManyWithoutCashierNestedInput
   expenses?: Prisma.ExpenseUncheckedUpdateManyWithoutCreatedByNestedInput
   movements?: Prisma.CashMovementUncheckedUpdateManyWithoutCreatedByNestedInput
   adjustments?: Prisma.StockAdjustmentUncheckedUpdateManyWithoutUserNestedInput
@@ -1237,6 +1380,7 @@ export type UserCreateWithoutExpensesInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutExpensesInput = {
@@ -1257,6 +1401,7 @@ export type UserUncheckedCreateWithoutExpensesInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutExpensesInput = {
@@ -1293,6 +1438,7 @@ export type UserUpdateWithoutExpensesInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutExpensesInput = {
@@ -1313,6 +1459,7 @@ export type UserUncheckedUpdateWithoutExpensesInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutStockLotsInput = {
@@ -1333,6 +1480,7 @@ export type UserCreateWithoutStockLotsInput = {
   adjustments?: Prisma.StockAdjustmentCreateNestedManyWithoutUserInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutStockLotsInput = {
@@ -1353,6 +1501,7 @@ export type UserUncheckedCreateWithoutStockLotsInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedCreateNestedManyWithoutUserInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutStockLotsInput = {
@@ -1389,6 +1538,7 @@ export type UserUpdateWithoutStockLotsInput = {
   adjustments?: Prisma.StockAdjustmentUpdateManyWithoutUserNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStockLotsInput = {
@@ -1409,6 +1559,7 @@ export type UserUncheckedUpdateWithoutStockLotsInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedUpdateManyWithoutUserNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutMovementsInput = {
@@ -1429,6 +1580,7 @@ export type UserCreateWithoutMovementsInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMovementsInput = {
@@ -1449,6 +1601,7 @@ export type UserUncheckedCreateWithoutMovementsInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMovementsInput = {
@@ -1485,6 +1638,7 @@ export type UserUpdateWithoutMovementsInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMovementsInput = {
@@ -1505,6 +1659,7 @@ export type UserUncheckedUpdateWithoutMovementsInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAdjustmentsInput = {
@@ -1525,6 +1680,7 @@ export type UserCreateWithoutAdjustmentsInput = {
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAdjustmentsInput = {
@@ -1545,6 +1701,7 @@ export type UserUncheckedCreateWithoutAdjustmentsInput = {
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   audit?: Prisma.AuditEventUncheckedCreateNestedManyWithoutActorInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAdjustmentsInput = {
@@ -1581,6 +1738,7 @@ export type UserUpdateWithoutAdjustmentsInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdjustmentsInput = {
@@ -1601,6 +1759,7 @@ export type UserUncheckedUpdateWithoutAdjustmentsInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAuditInput = {
@@ -1621,6 +1780,7 @@ export type UserCreateWithoutAuditInput = {
   adjustments?: Prisma.StockAdjustmentCreateNestedManyWithoutUserInput
   stockLots?: Prisma.StockLotCreateNestedManyWithoutReceivedByInput
   accountTokens?: Prisma.AccountTokenCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAuditInput = {
@@ -1641,6 +1801,7 @@ export type UserUncheckedCreateWithoutAuditInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedCreateNestedManyWithoutUserInput
   stockLots?: Prisma.StockLotUncheckedCreateNestedManyWithoutReceivedByInput
   accountTokens?: Prisma.AccountTokenUncheckedCreateNestedManyWithoutUserInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAuditInput = {
@@ -1677,6 +1838,7 @@ export type UserUpdateWithoutAuditInput = {
   adjustments?: Prisma.StockAdjustmentUpdateManyWithoutUserNestedInput
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditInput = {
@@ -1697,6 +1859,7 @@ export type UserUncheckedUpdateWithoutAuditInput = {
   adjustments?: Prisma.StockAdjustmentUncheckedUpdateManyWithoutUserNestedInput
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyStoreInput = {
@@ -1727,6 +1890,7 @@ export type UserUpdateWithoutStoreInput = {
   stockLots?: Prisma.StockLotUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStoreInput = {
@@ -1747,6 +1911,7 @@ export type UserUncheckedUpdateWithoutStoreInput = {
   stockLots?: Prisma.StockLotUncheckedUpdateManyWithoutReceivedByNestedInput
   audit?: Prisma.AuditEventUncheckedUpdateManyWithoutActorNestedInput
   accountTokens?: Prisma.AccountTokenUncheckedUpdateManyWithoutUserNestedInput
+  createdDebtPayments?: Prisma.DebtPaymentUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutStoreInput = {
@@ -1775,6 +1940,7 @@ export type UserCountOutputType = {
   stockLots: number
   audit: number
   accountTokens: number
+  createdDebtPayments: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1788,6 +1954,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   stockLots?: boolean | UserCountOutputTypeCountStockLotsArgs
   audit?: boolean | UserCountOutputTypeCountAuditArgs
   accountTokens?: boolean | UserCountOutputTypeCountAccountTokensArgs
+  createdDebtPayments?: boolean | UserCountOutputTypeCountCreatedDebtPaymentsArgs
 }
 
 /**
@@ -1870,6 +2037,13 @@ export type UserCountOutputTypeCountAccountTokensArgs<ExtArgs extends runtime.Ty
   where?: Prisma.AccountTokenWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCreatedDebtPaymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DebtPaymentWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1891,6 +2065,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   stockLots?: boolean | Prisma.User$stockLotsArgs<ExtArgs>
   audit?: boolean | Prisma.User$auditArgs<ExtArgs>
   accountTokens?: boolean | Prisma.User$accountTokensArgs<ExtArgs>
+  createdDebtPayments?: boolean | Prisma.User$createdDebtPaymentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1942,6 +2117,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   stockLots?: boolean | Prisma.User$stockLotsArgs<ExtArgs>
   audit?: boolean | Prisma.User$auditArgs<ExtArgs>
   accountTokens?: boolean | Prisma.User$accountTokensArgs<ExtArgs>
+  createdDebtPayments?: boolean | Prisma.User$createdDebtPaymentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1965,6 +2141,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     stockLots: Prisma.$StockLotPayload<ExtArgs>[]
     audit: Prisma.$AuditEventPayload<ExtArgs>[]
     accountTokens: Prisma.$AccountTokenPayload<ExtArgs>[]
+    createdDebtPayments: Prisma.$DebtPaymentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2380,6 +2557,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   stockLots<T extends Prisma.User$stockLotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$stockLotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StockLotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   audit<T extends Prisma.User$auditArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   accountTokens<T extends Prisma.User$accountTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  createdDebtPayments<T extends Prisma.User$createdDebtPaymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdDebtPaymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DebtPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3055,6 +3233,30 @@ export type User$accountTokensArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.AccountTokenScalarFieldEnum | Prisma.AccountTokenScalarFieldEnum[]
+}
+
+/**
+ * User.createdDebtPayments
+ */
+export type User$createdDebtPaymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DebtPayment
+   */
+  select?: Prisma.DebtPaymentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DebtPayment
+   */
+  omit?: Prisma.DebtPaymentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DebtPaymentInclude<ExtArgs> | null
+  where?: Prisma.DebtPaymentWhereInput
+  orderBy?: Prisma.DebtPaymentOrderByWithRelationInput | Prisma.DebtPaymentOrderByWithRelationInput[]
+  cursor?: Prisma.DebtPaymentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DebtPaymentScalarFieldEnum | Prisma.DebtPaymentScalarFieldEnum[]
 }
 
 /**

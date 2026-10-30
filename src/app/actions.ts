@@ -194,6 +194,54 @@ export async function checkout(form: FormData) {
   redirect("/?section=checkout&success=sale");
 }
 
+export async function recordDebtPayment(form: FormData) {
+  const session = await requireRole("OWNER", "MANAGER", "CASHIER");
+  const saleId = text(form, "saleId", 40);
+  const amountCents = parseMoney(form.get("amount"), session.user.store.currency);
+  const rawMethod = text(form, "method", 10);
+  const paymentMethod = rawMethod === "CARD" || rawMethod === "BANK" ? rawMethod : rawMethod === "CASH" ? "CASH" : null;
+  if (!saleId || amountCents === null || amountCents < 1 || !paymentMethod) redirect("/?section=debts&error=debt-payment");
+  const today = businessDate(session.user.store.timezone);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const day = await tx.cashSession.findUnique({ where: { storeId_businessDate: { storeId: session.user.storeId, businessDate: today } } });
+      if (!day || day.status !== "OPEN") throw new Error("drawer");
+      const sale = await tx.sale.findFirst({ where: { id: saleId, storeId: session.user.storeId, creditCents: { gt: 0 }, customerId: { not: null } } });
+      if (!sale) throw new Error("debt-sale");
+      const paid = await tx.debtPayment.aggregate({ where: { saleId: sale.id }, _sum: { amountCents: true } });
+      const balance = sale.creditCents - (paid._sum.amountCents ?? 0);
+      if (amountCents > balance) throw new Error("debt-balance");
+      const payment = await tx.debtPayment.create({ data: { customerId: sale.customerId!, saleId: sale.id, createdById: session.userId, method: paymentMethod, amountCents, businessDate: today } });
+      await tx.auditEvent.create({ data: { storeId: session.user.storeId, actorId: session.userId, action: "DEBT_PAYMENT_RECORDED", metadata: { paymentId: payment.id, saleId: sale.id, amountCents, method: paymentMethod } } });
+    }, { isolationLevel: "Serializable" });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "";
+    redirect(`/?section=debts&error=${reason === "drawer" ? "drawer" : "debt-payment"}`);
+  }
+  revalidatePath("/");
+  redirect("/?section=debts&success=debt-payment");
+}
+
+export async function createDebtCustomer(form: FormData) {
+  const session = await requireRole("OWNER", "MANAGER", "CASHIER");
+  const name = text(form, "name", 100);
+  const phone = text(form, "phone", 32);
+  if (!name) redirect("/?section=debts&error=debt-customer");
+  try {
+    await prisma.$transaction(async (tx) => {
+      const duplicate = await tx.customer.findFirst({ where: { storeId: session.user.storeId, ...(phone ? { phone } : { name: { equals: name, mode: "insensitive" } }) }, select: { id: true } });
+      if (duplicate) throw new Error("customer-exists");
+      await tx.customer.create({ data: { storeId: session.user.storeId, name, phone: phone || null } });
+      await tx.auditEvent.create({ data: { storeId: session.user.storeId, actorId: session.userId, action: "DEBT_CUSTOMER_CREATED", metadata: { name, hasPhone: !!phone } } });
+    }, { isolationLevel: "Serializable" });
+  } catch (error) {
+    if ((error instanceof Error && error.message === "customer-exists") || (!!error && typeof error === "object" && "code" in error && error.code === "P2002")) redirect("/?section=debts&error=customer-exists");
+    redirect("/?section=debts&error=debt-customer");
+  }
+  revalidatePath("/");
+  redirect("/?section=debts&success=customer-added");
+}
+
 async function consumeLotsAndCost(tx: TransactionClient, productId: string, quantity: number) {
   const lots = await tx.stockLot.findMany({ where: { productId, quantityRemaining: { gt: 0 } }, orderBy: [{ receivedAt: "asc" }, { id: "asc" }] });
   const plan = planFifoConsumption(lots, quantity);
@@ -256,14 +304,15 @@ export async function closeCashDay(form: FormData) {
   await prisma.$transaction(async (tx) => {
     const day = await tx.cashSession.findUnique({ where: { storeId_businessDate: { storeId: session.user.storeId, businessDate: today } } });
     if (!day || day.status !== "OPEN") throw new Error("No open cash day");
-    const [sales, expenses, movements] = await Promise.all([
+    const [sales, debtPayments, expenses, movements] = await Promise.all([
       tx.salePayment.aggregate({ where: { sale: { storeId: session.user.storeId, businessDate: today }, method: "CASH" }, _sum: { amountCents: true } }),
+      tx.debtPayment.aggregate({ where: { customer: { storeId: session.user.storeId }, businessDate: today, method: "CASH" }, _sum: { amountCents: true } }),
       tx.expense.aggregate({ where: { storeId: session.user.storeId, businessDate: today, method: "CASH" }, _sum: { amountCents: true } }),
       tx.cashMovement.groupBy({ by: ["kind"], where: { storeId: session.user.storeId, businessDate: today }, _sum: { amountCents: true } }),
     ]);
     const inTotal = movements.find((item) => item.kind === "CASH_IN")?._sum.amountCents ?? 0;
     const outTotal = movements.find((item) => item.kind === "CASH_OUT")?._sum.amountCents ?? 0;
-    const expectedCash = expectedDrawerCash(day.openingCash, sales._sum.amountCents ?? 0, expenses._sum.amountCents ?? 0, inTotal, outTotal);
+    const expectedCash = expectedDrawerCash(day.openingCash, (sales._sum.amountCents ?? 0) + (debtPayments._sum.amountCents ?? 0), expenses._sum.amountCents ?? 0, inTotal, outTotal);
     await tx.cashSession.update({ where: { id: day.id }, data: { countedCash, expectedCash, status: "CLOSED", closedById: session.userId, closedAt: new Date() } });
   });
   revalidatePath("/");

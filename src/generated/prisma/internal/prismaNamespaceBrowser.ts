@@ -59,6 +59,8 @@ export const ModelName = {
   Product: 'Product',
   CashSession: 'CashSession',
   Sale: 'Sale',
+  Customer: 'Customer',
+  DebtPayment: 'DebtPayment',
   SaleItem: 'SaleItem',
   SalePayment: 'SalePayment',
   Expense: 'Expense',
@@ -189,13 +191,41 @@ export const SaleScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
   cashierId: 'cashierId',
+  customerId: 'customerId',
   totalCents: 'totalCents',
+  creditCents: 'creditCents',
   businessDate: 'businessDate',
   offlineId: 'offlineId',
   createdAt: 'createdAt'
 } as const
 
 export type SaleScalarFieldEnum = (typeof SaleScalarFieldEnum)[keyof typeof SaleScalarFieldEnum]
+
+
+export const CustomerScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  name: 'name',
+  phone: 'phone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CustomerScalarFieldEnum = (typeof CustomerScalarFieldEnum)[keyof typeof CustomerScalarFieldEnum]
+
+
+export const DebtPaymentScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  saleId: 'saleId',
+  createdById: 'createdById',
+  method: 'method',
+  amountCents: 'amountCents',
+  businessDate: 'businessDate',
+  createdAt: 'createdAt'
+} as const
+
+export type DebtPaymentScalarFieldEnum = (typeof DebtPaymentScalarFieldEnum)[keyof typeof DebtPaymentScalarFieldEnum]
 
 
 export const SaleItemScalarFieldEnum = {

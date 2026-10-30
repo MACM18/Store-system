@@ -35,41 +35,43 @@ model SetupClaim {
 }
 
 model Store {
-  id        String   @id @default(cuid())
-  name      String
-  currency  String   @default("LKR") @db.Char(3)
-  timezone  String   @default("Asia/Colombo")
-  createdAt DateTime @default(now())
-  users     User[]
-  products  Product[]
-  sessions  CashSession[]
-  sales     Sale[]
-  expenses  Expense[]
-  movements CashMovement[]
-  audit     AuditEvent[]
-  accountTokens AccountToken[]
-}
-
-model User {
-  id            String        @id @default(cuid())
-  storeId       String
-  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
   name          String
-  email         String        @unique
-  passwordHash  String
-  role          Role
-  active        Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  sessions      DeviceSession[]
-  cashSessions  CashSession[] @relation("CashSessionOpener")
-  closedDays    CashSession[] @relation("CashSessionCloser")
+  currency      String         @default("LKR") @db.Char(3)
+  timezone      String         @default("Asia/Colombo")
+  createdAt     DateTime       @default(now())
+  users         User[]
+  products      Product[]
+  sessions      CashSession[]
   sales         Sale[]
   expenses      Expense[]
   movements     CashMovement[]
-  adjustments   StockAdjustment[]
-  stockLots     StockLot[]
   audit         AuditEvent[]
   accountTokens AccountToken[]
+  customers     Customer[]
+}
+
+model User {
+  id                  String            @id @default(cuid())
+  storeId             String
+  store               Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name                String
+  email               String            @unique
+  passwordHash        String
+  role                Role
+  active              Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  sessions            DeviceSession[]
+  cashSessions        CashSession[]     @relation("CashSessionOpener")
+  closedDays          CashSession[]     @relation("CashSessionCloser")
+  sales               Sale[]
+  expenses            Expense[]
+  movements           CashMovement[]
+  adjustments         StockAdjustment[]
+  stockLots           StockLot[]
+  audit               AuditEvent[]
+  accountTokens       AccountToken[]
+  createdDebtPayments DebtPayment[]
 }
 
 model AccountToken {
@@ -103,63 +105,105 @@ model DeviceSession {
   lastSeenAt DateTime  @default(now())
   expiresAt  DateTime
   revokedAt  DateTime?
+
   @@index([userId, revokedAt])
 }
 
 model Product {
-  id             String            @id @default(cuid())
-  storeId        String
-  store          Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  sku            String
-  name           String
-  category       String            @default("General")
-  priceCents     Int
-  costCents      Int?
-  stock          Int               @default(0)
-  lowStockAt     Int               @default(5)
-  active         Boolean           @default(true)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  saleItems      SaleItem[]
-  adjustments    StockAdjustment[]
-  stockLots      StockLot[]
+  id          String            @id @default(cuid())
+  storeId     String
+  store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  sku         String
+  name        String
+  category    String            @default("General")
+  priceCents  Int
+  costCents   Int?
+  stock       Int               @default(0)
+  lowStockAt  Int               @default(5)
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  saleItems   SaleItem[]
+  adjustments StockAdjustment[]
+  stockLots   StockLot[]
+
   @@unique([storeId, sku])
   @@index([storeId, active, name])
 }
 
 model CashSession {
-  id             String    @id @default(cuid())
-  storeId        String
-  store          Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  businessDate   String
-  openingCash    Int
-  countedCash    Int?
-  expectedCash   Int?
-  status         String    @default("OPEN")
-  openedById     String
-  openedBy       User      @relation("CashSessionOpener", fields: [openedById], references: [id])
-  closedById     String?
-  closedBy       User?     @relation("CashSessionCloser", fields: [closedById], references: [id])
-  openedAt       DateTime  @default(now())
-  closedAt       DateTime?
+  id           String    @id @default(cuid())
+  storeId      String
+  store        Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  businessDate String
+  openingCash  Int
+  countedCash  Int?
+  expectedCash Int?
+  status       String    @default("OPEN")
+  openedById   String
+  openedBy     User      @relation("CashSessionOpener", fields: [openedById], references: [id])
+  closedById   String?
+  closedBy     User?     @relation("CashSessionCloser", fields: [closedById], references: [id])
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+
   @@unique([storeId, businessDate])
   @@index([storeId, status])
 }
 
 model Sale {
-  id            String      @id @default(cuid())
-  storeId       String
-  store         Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  cashierId     String
-  cashier       User        @relation(fields: [cashierId], references: [id])
-  totalCents    Int
-  businessDate  String
-  offlineId     String?
-  createdAt     DateTime    @default(now())
-  items         SaleItem[]
-  payments      SalePayment[]
+  id           String        @id @default(cuid())
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cashierId    String
+  cashier      User          @relation(fields: [cashierId], references: [id])
+  customerId   String?
+  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  totalCents   Int
+  creditCents  Int           @default(0)
+  businessDate String
+  offlineId    String?
+  createdAt    DateTime      @default(now())
+  items        SaleItem[]
+  payments     SalePayment[]
+  debtPayments DebtPayment[] @relation("DebtSale")
+
   @@unique([storeId, offlineId])
   @@index([storeId, businessDate])
+  @@index([customerId])
+}
+
+model Customer {
+  id        String        @id @default(cuid())
+  storeId   String
+  store     Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sales     Sale[]
+  payments  DebtPayment[] @relation("CustomerPayments")
+
+  @@unique([storeId, phone])
+  @@index([storeId, name])
+}
+
+model DebtPayment {
+  id           String        @id @default(cuid())
+  customerId   String
+  customer     Customer      @relation("CustomerPayments", fields: [customerId], references: [id], onDelete: Restrict)
+  saleId       String
+  sale         Sale          @relation("DebtSale", fields: [saleId], references: [id], onDelete: Restrict)
+  createdById  String
+  createdBy    User          @relation(fields: [createdById], references: [id])
+  method       PaymentMethod
+  amountCents  Int
+  businessDate String
+  createdAt    DateTime      @default(now())
+
+  @@index([customerId, createdAt])
+  @@index([saleId, createdAt])
+  @@index([businessDate, method])
 }
 
 model SaleItem {
@@ -177,27 +221,29 @@ model SaleItem {
 }
 
 model SalePayment {
-  id        String        @id @default(cuid())
-  saleId    String
-  sale      Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  method    PaymentMethod
+  id          String        @id @default(cuid())
+  saleId      String
+  sale        Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  method      PaymentMethod
   amountCents Int
+
   @@index([saleId, method])
 }
 
 model Expense {
-  id          String        @id @default(cuid())
-  storeId     String
-  store       Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  createdById String
-  createdBy   User          @relation(fields: [createdById], references: [id])
-  category    String
-  description String
-  method      PaymentMethod
-  amountCents Int
+  id           String        @id @default(cuid())
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User          @relation(fields: [createdById], references: [id])
+  category     String
+  description  String
+  method       PaymentMethod
+  amountCents  Int
   businessDate String
-  createdAt   DateTime      @default(now())
-  stockLot    StockLot?
+  createdAt    DateTime      @default(now())
+  stockLot     StockLot?
+
   @@index([storeId, businessDate])
 }
 
@@ -213,32 +259,34 @@ model StockLot {
   quantityRemaining Int
   unitCostCents     Int
   receivedAt        DateTime @default(now())
+
   @@index([productId, receivedAt])
 }
 
 model CashMovement {
-  id          String           @id @default(cuid())
-  storeId     String
-  store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  createdById String
-  createdBy   User              @relation(fields: [createdById], references: [id])
-  kind        CashMovementKind
-  reason      String
-  amountCents Int
+  id           String           @id @default(cuid())
+  storeId      String
+  store        Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User             @relation(fields: [createdById], references: [id])
+  kind         CashMovementKind
+  reason       String
+  amountCents  Int
   businessDate String
-  createdAt   DateTime          @default(now())
+  createdAt    DateTime         @default(now())
+
   @@index([storeId, businessDate])
 }
 
 model StockAdjustment {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  delta       Int
-  reason      String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
 }
 
 model AuditEvent {
@@ -250,5 +298,6 @@ model AuditEvent {
   action    String
   metadata  Json?
   createdAt DateTime @default(now())
+
   @@index([storeId, createdAt])
 }
