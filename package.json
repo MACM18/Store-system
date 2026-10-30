@@ -1,0 +1,36 @@
+{
+  "name": "store-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "prisma generate && next build",
+    "start": "node scripts/start.mjs",
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "db:migrate": "prisma migrate deploy",
+    "db:dev": "prisma migrate dev",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "dotenv": "^17.2.3",
+    "next": "16.2.1",
+    "pg": "^8.16.3",
+    "prisma": "^7.7.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.2.1",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK
+}
+
+enum CashMovementKind {
+  CASH_IN
+  CASH_OUT
+}
+
+model SetupClaim {
+  id        Int      @id
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  currency  String   @default("LKR") @db.Char(3)
+  timezone  String   @default("Asia/Colombo")
+  createdAt DateTime @default(now())
+  users     User[]
+  products  Product[]
+  sessions  CashSession[]
+  sales     Sale[]
+  expenses  Expense[]
+  movements CashMovement[]
+  audit     AuditEvent[]
+}
+
+model User {
+  id            String        @id @default(cuid())
+  storeId       String
+  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name          String
+  email         String        @unique
+  passwordHash  String
+  role          Role
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  sessions      DeviceSession[]
+  cashSessions  CashSession[] @relation("CashSessionOpener")
+  closedDays    CashSession[] @relation("CashSessionCloser")
+  sales         Sale[]
+  expenses      Expense[]
+  movements     CashMovement[]
+  adjustments   StockAdjustment[]
+  stockLots     StockLot[]
+  audit         AuditEvent[]
+}
+
+model DeviceSession {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  deviceName String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  @@index([userId, revokedAt])
+}
+
+model Product {
+  id             String            @id @default(cuid())
+  storeId        String
+  store          Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  sku            String
+  name           String
+  category       String            @default("General")
+  priceCents     Int
+  costCents      Int?
+  stock          Int               @default(0)
+  lowStockAt     Int               @default(5)
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  saleItems      SaleItem[]
+  adjustments    StockAdjustment[]
+  stockLots      StockLot[]
+  @@unique([storeId, sku])
+  @@index([storeId, active, name])
+}
+
+model CashSession {
+  id             String    @id @default(cuid())
+  storeId        String
+  store          Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  businessDate   String
+  openingCash    Int
+  countedCash    Int?
+  expectedCash   Int?
+  status         String    @default("OPEN")
+  openedById     String
+  openedBy       User      @relation("CashSessionOpener", fields: [openedById], references: [id])
+  closedById     String?
+  closedBy       User?     @relation("CashSessionCloser", fields: [closedById], references: [id])
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  @@unique([storeId, businessDate])
+  @@index([storeId, status])
+}
+
+model Sale {
+  id            String      @id @default(cuid())
+  storeId       String
+  store         Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cashierId     String
+  cashier       User        @relation(fields: [cashierId], references: [id])
+  totalCents    Int
+  businessDate  String
+  createdAt     DateTime    @default(now())
+  items         SaleItem[]
+  payments      SalePayment[]
+  @@index([storeId, businessDate])
+}
+
+model SaleItem {
+  id             String  @id @default(cuid())
+  saleId         String
+  sale           Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product @relation(fields: [productId], references: [id])
+  productName    String
+  quantity       Int
+  unitPriceCents Int
+  unitCostCents  Int
+  lineCostCents  Int
+  lineTotalCents Int
+}
+
+model SalePayment {
+  id        String        @id @default(cuid())
+  saleId    String
+  sale      Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  method    PaymentMethod
+  amountCents Int
+  @@index([saleId, method])
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  storeId     String
+  store       Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  category    String
+  description String
+  method      PaymentMethod
+  amountCents Int
+  businessDate String
+  createdAt   DateTime      @default(now())
+  stockLot    StockLot?
+  @@index([storeId, businessDate])
+}
+
+model StockLot {
+  id                String   @id @default(cuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  receivedById      String
+  receivedBy        User     @relation(fields: [receivedById], references: [id])
+  expenseId         String?  @unique
+  expense           Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  quantityReceived  Int
+  quantityRemaining Int
+  unitCostCents     Int
+  receivedAt        DateTime @default(now())
+  @@index([productId, receivedAt])
+}
+
+model CashMovement {
+  id          String           @id @default(cuid())
+  storeId     String
+  store       Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  kind        CashMovementKind
+  reason      String
+  amountCents Int
+  businessDate String
+  createdAt   DateTime          @default(now())
+  @@index([storeId, businessDate])
+}
+
+model StockAdjustment {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  delta       Int
+  reason      String
+  createdAt   DateTime @default(now())
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  @@index([storeId, createdAt])
+}
