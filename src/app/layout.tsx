@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Daymark · Store operations",
+  title: "Store management",
   description: "A clear daily view of your store's cash, sales, and stock.",
 };
 
