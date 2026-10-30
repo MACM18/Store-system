@@ -11,7 +11,7 @@ export default async function AccountSetup({ searchParams }: { searchParams: Pro
   const safeToken = token && /^[A-Za-z0-9_-]{40,50}$/.test(token) ? token : "";
   const tokenHash = safeToken ? createHash("sha256").update(safeToken).digest("hex") : "";
   const accountToken = tokenHash ? await prisma.accountToken.findUnique({ where: { tokenHash }, include: { store: { select: { name: true } }, user: { select: { name: true } } } }) : null;
-  const valid = !!accountToken && !accountToken.usedAt && accountToken.expiresAt > new Date() && (accountToken.type === "INVITE" ? !!accountToken.inviteName : !!accountToken.userId);
+  const valid = !!accountToken && !accountToken.usedAt && accountToken.expiresAt > new Date() && (accountToken.type === "INVITE" ? !!accountToken.inviteName && ["OWNER", "MANAGER", "CASHIER"].includes(accountToken.inviteRole ?? "") : !!accountToken.userId);
   const invite = accountToken?.type === "INVITE";
   const name = invite ? accountToken?.inviteName : accountToken?.user?.name;
   const title = invite ? "Set up your account" : "Choose a new password";
@@ -22,7 +22,7 @@ export default async function AccountSetup({ searchParams }: { searchParams: Pro
     <div className="auth-eyebrow">{valid ? (invite ? "TEAM INVITATION" : "ACCOUNT SECURITY") : "LINK UNAVAILABLE"}</div>
     <h1>{valid ? title : "This link can’t be used."}</h1>
     {valid ? <>
-      <p className="auth-copy">{invite ? <>You’re joining <strong>{accountToken.store.name}</strong> as a team member.</> : <>Update the password for your account at <strong>{accountToken.store.name}</strong>.</>}</p>
+      <p className="auth-copy">{invite ? <>You’re joining <strong>{accountToken.store.name}</strong> as a <strong>{accountToken.inviteRole === "OWNER" ? "Admin" : accountToken.inviteRole === "MANAGER" ? "Manager" : "Cashier"}</strong>.</> : <>Update the password for your account at <strong>{accountToken.store.name}</strong>.</>}</p>
       <p className="account-setup-recipient"><FiCheckCircle aria-hidden="true" /> {name} · {accountToken.email}</p>
       {errorMessage && <p className="form-error" role="alert">{errorMessage}</p>}
       <form action={finishAccountSetup} className="form-stack">

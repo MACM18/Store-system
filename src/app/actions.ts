@@ -294,7 +294,7 @@ export async function inviteStaffUser(form: FormData) {
   const name = text(form, "name", 100);
   const email = text(form, "email", 254).toLowerCase();
   const role = text(form, "role", 10);
-  if (!name || !/^\S+@\S+\.\S+$/.test(email) || (role !== "MANAGER" && role !== "CASHIER")) redirect("/?section=settings&error=user");
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || (role !== "OWNER" && role !== "MANAGER" && role !== "CASHIER")) redirect("/?section=settings&error=user");
   if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) redirect("/?section=settings&error=email");
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + INVITE_VALIDITY_HOURS * 60 * 60 * 1000);
@@ -317,6 +317,41 @@ export async function inviteStaffUser(form: FormData) {
   await prisma.accountToken.updateMany({ where: { id: { not: invite.id }, storeId: session.user.storeId, email, type: "INVITE", usedAt: null }, data: { usedAt: new Date() } });
   revalidatePath("/");
   redirect("/?section=settings&success=invite");
+}
+
+export async function updateStaffRole(form: FormData) {
+  const session = await requireRole("OWNER");
+  const userId = text(form, "userId", 40);
+  const role = text(form, "role", 10);
+  if (!userId || userId === session.userId || (role !== "OWNER" && role !== "MANAGER" && role !== "CASHIER")) redirect("/?section=settings&error=role");
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const target = await tx.user.findFirst({ where: { id: userId, storeId: session.user.storeId, active: true } });
+      if (!target) throw new Error("role-target");
+      if (target.role === role) return;
+
+      if (target.role === "OWNER" && role !== "OWNER") {
+        const firstOwner = await tx.user.findFirst({ where: { storeId: session.user.storeId, role: "OWNER" }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
+        if (firstOwner?.id === target.id) throw new Error("first-admin");
+        const activeOwners = await tx.user.count({ where: { storeId: session.user.storeId, role: "OWNER", active: true } });
+        if (activeOwners <= 1) throw new Error("last-admin");
+      }
+
+      const updated = await tx.user.updateMany({ where: { id: target.id, storeId: session.user.storeId, active: true, role: target.role }, data: { role } });
+      if (updated.count !== 1) throw new Error("role-conflict");
+      // Role changes take effect cleanly by requiring the member to sign in again.
+      await tx.deviceSession.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: new Date() } });
+      await tx.auditEvent.create({ data: { storeId: session.user.storeId, actorId: session.userId, action: "USER_ROLE_CHANGED", metadata: { userId: target.id, from: target.role, to: role } } });
+    }, { isolationLevel: "Serializable" });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "";
+    if (reason === "first-admin") redirect("/?section=settings&error=first-admin");
+    if (reason === "last-admin") redirect("/?section=settings&error=last-admin");
+    redirect("/?section=settings&error=role");
+  }
+  revalidatePath("/");
+  redirect("/?section=settings&success=role-updated");
 }
 
 export async function sendStaffPasswordReset(form: FormData) {
@@ -365,7 +400,7 @@ export async function finishAccountSetup(form: FormData) {
       if (claimed.count !== 1) throw new Error("Account link was already used");
 
       if (accountToken.type === "INVITE") {
-        if (!accountToken.inviteName || (accountToken.inviteRole !== "MANAGER" && accountToken.inviteRole !== "CASHIER")) throw new Error("Invitation is incomplete");
+        if (!accountToken.inviteName || (accountToken.inviteRole !== "OWNER" && accountToken.inviteRole !== "MANAGER" && accountToken.inviteRole !== "CASHIER")) throw new Error("Invitation is incomplete");
         await tx.user.create({ data: { storeId: accountToken.storeId, name: accountToken.inviteName, email: accountToken.email, role: accountToken.inviteRole, passwordHash } });
         await tx.accountToken.updateMany({ where: { storeId: accountToken.storeId, email: accountToken.email, type: "INVITE", usedAt: null }, data: { usedAt: now } });
       } else {
