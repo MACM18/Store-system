@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { addExpense, adjustStock, checkout, closeCashDay, createProduct, inviteStaffUser, openCashDay, receiveStock, recordCashMovement, revokeAllDeviceSessions, revokeDeviceSession, sendStaffPasswordReset, updateProduct, updateStoreSettings } from "@/app/actions";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { addExpense, adjustStock, closeCashDay, createProduct, inviteStaffUser, openCashDay, receiveStock, recordCashMovement, revokeAllDeviceSessions, revokeDeviceSession, sendStaffPasswordReset, updateProduct, updateStoreSettings } from "@/app/actions";
 import { formatMoney, moneyInputStep } from "@/lib/money";
 import { SearchableSelect } from "@/components/searchable-select";
 import { Dialog } from "@/components/dialog";
 import { ProfileMenu } from "@/components/profile-menu";
-import { FiActivity, FiAlertCircle, FiArchive, FiCheck, FiClock, FiCreditCard, FiDollarSign, FiFileText, FiHome, FiInfo, FiLock, FiMinus, FiPackage, FiPieChart, FiPlus, FiRefreshCw, FiSearch, FiShoppingCart, FiSmartphone, FiUsers, FiX } from "react-icons/fi";
+import { InstallAppButton } from "@/components/install-app-button";
+import { businessDate } from "@/lib/dates";
+import { OfflineSale, queueOfflineSale, readOfflineSales, saveOfflineSale, saveOfflineSnapshot, synchronizeOfflineSales } from "@/lib/offline-store";
+import { FiActivity, FiAlertCircle, FiArchive, FiCheck, FiClock, FiCreditCard, FiDollarSign, FiFileText, FiHome, FiInfo, FiLock, FiMinus, FiPackage, FiPieChart, FiPlus, FiRefreshCw, FiSearch, FiShoppingCart, FiSmartphone, FiUsers, FiWifi, FiWifiOff, FiX } from "react-icons/fi";
 
 type Role = "OWNER" | "MANAGER" | "CASHIER";
 type Product = { id: string; sku: string; name: string; category: string; priceCents: number; costCents: number | null; stock: number; lowStockAt: number; active: boolean };
@@ -48,11 +53,18 @@ function Notice({ success, error }: { success?: string; error?: string }) {
 }
 
 export function StoreApp({ data }: { data: Props }) {
+  const router = useRouter();
   const [section, setSection] = useState(data.section);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [payments, setPayments] = useState({ cash: 0, card: 0, bank: 0 });
   const [inventorySearch, setInventorySearch] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [online, setOnline] = useState(true);
+  const [queuedSales, setQueuedSales] = useState(0);
+  const [retryableSales, setRetryableSales] = useState(0);
+  const [offlineSold, setOfflineSold] = useState<Record<string, number>>({});
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
   const currency = data.store.currency;
   const digits = new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
   const factor = 10 ** digits;
@@ -68,10 +80,109 @@ export function StoreApp({ data }: { data: Props }) {
   const retailStockValue = data.products.reduce((sum, product) => sum + product.stock * product.priceCents, 0);
   const buyingStockValue = data.products.reduce((sum, product) => sum + product.stock * (product.costCents ?? 0), 0);
 
+  const refreshOfflineSales = useCallback(async () => {
+    const sales = (await readOfflineSales().catch(() => [])).filter((sale) => sale.userId === data.user.id && sale.storeId === data.store.id);
+    setQueuedSales(sales.filter((sale) => sale.state !== "synced").length);
+    setRetryableSales(sales.filter((sale) => sale.state === "queued").length);
+    const sold: Record<string, number> = {};
+    for (const sale of sales.filter((item) => item.state !== "synced")) for (const line of sale.lines) sold[line.productId] = (sold[line.productId] ?? 0) + line.quantity;
+    setOfflineSold(sold);
+  }, [data.store.id, data.user.id]);
+
+  const syncOfflineAndRefresh = useCallback(async () => {
+    const before = await readOfflineSales().catch(() => []);
+    const after = await synchronizeOfflineSales().catch(() => before);
+    await refreshOfflineSales();
+    if (before.some((sale) => sale.state === "queued" && after.some((next) => next.id === sale.id && next.state === "synced"))) router.refresh();
+  }, [refreshOfflineSales, router]);
+
+  useEffect(() => {
+    const snapshot = {
+      store: data.store,
+      user: { id: data.user.id, name: data.user.name, role: data.user.role },
+      today: data.today,
+      products: data.products.map(({ id, name, sku, category, priceCents, stock, active }) => ({ id, name, sku, category, priceCents, stock, active })),
+      cashDay: data.cashDay ? { status: data.cashDay.status, openingCash: data.cashDay.openingCash } : null,
+      savedAt: new Date().toISOString(),
+    };
+    void Promise.resolve().then(() => setOnline(navigator.onLine));
+    void saveOfflineSnapshot(snapshot)
+      .then(() => Promise.resolve().then(refreshOfflineSales))
+      .then(() => navigator.onLine ? Promise.resolve().then(syncOfflineAndRefresh) : undefined)
+      .catch(() => undefined);
+    const update = () => {
+      setOnline(navigator.onLine);
+      if (navigator.onLine) void syncOfflineAndRefresh();
+    };
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    window.addEventListener("offline-sales-changed", refreshOfflineSales);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+      window.removeEventListener("offline-sales-changed", refreshOfflineSales);
+    };
+  }, [data, refreshOfflineSales, syncOfflineAndRefresh]);
+
+  async function handleCheckoutSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (checkoutBusy || !cartLines.length) return;
+    const createdAt = new Date().toISOString();
+    const record: Omit<OfflineSale, "state"> = {
+      id: crypto.randomUUID(),
+      storeId: data.store.id,
+      userId: data.user.id,
+      createdAt,
+      businessDate: businessDate(data.store.timezone, new Date(createdAt)),
+      lines: cartLines.map(({ product, quantity }) => ({ productId: product.id, name: product.name, priceCents: product.priceCents, quantity })),
+      payments: { cash: payments.cash, card: payments.card, bank: payments.bank },
+    };
+    const savedLocally = async (state: "queued" | "conflict", message: string) => {
+      await saveOfflineSale({ ...record, state, error: message });
+      window.dispatchEvent(new Event("offline-sales-changed"));
+      setCheckoutMessage(message);
+      setCart({});
+      setPayments({ cash: 0, card: 0, bank: 0 });
+      await refreshOfflineSales();
+    };
+    setCheckoutBusy(true);
+    setCheckoutMessage("");
+    try {
+      await queueOfflineSale(record);
+      await refreshOfflineSales();
+    } catch {
+      setCheckoutMessage("This device could not save the sale locally. Please keep this page open and try again.");
+      setCheckoutBusy(false);
+      return;
+    }
+    try {
+      const response = await fetch("/api/offline/sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(record), cache: "no-store" });
+      if (response.ok) {
+        await saveOfflineSale({ ...record, state: "synced" });
+        window.dispatchEvent(new Event("offline-sales-changed"));
+        await refreshOfflineSales();
+        setCheckoutMessage("Sale completed.");
+        setCart({});
+        setPayments({ cash: 0, card: 0, bank: 0 });
+        router.refresh();
+      } else {
+        const result = await response.json().catch(() => ({})) as { error?: string };
+        const message = result.error ?? "The sale could not be confirmed. It was saved on this device for review.";
+        if (response.status === 401 || response.status >= 500) await savedLocally("queued", `${message} It will retry when connected and signed in.`);
+        else await savedLocally("conflict", `${message} This sale is saved on this device and needs review.`);
+      }
+    } catch {
+      await savedLocally("queued", "Connection lost. Sale saved on this device and will sync when you’re back online.");
+      setOnline(false);
+    } finally {
+      setCheckoutBusy(false);
+    }
+  }
+
   function updateCart(productId: string, quantity: number) {
     const product = data.products.find((item) => item.id === productId);
     if (!product) return;
-    const next = Math.max(0, Math.min(product.stock, quantity));
+    const next = Math.max(0, Math.min(product.stock - (offlineSold[product.id] ?? 0), quantity));
     const newCart = { ...cart };
     if (!next) delete newCart[productId]; else newCart[productId] = next;
     setCart(newCart);
@@ -96,8 +207,8 @@ export function StoreApp({ data }: { data: Props }) {
     </aside>
 
     <main className="main-area">
-      <header className="topbar"><button className="mobile-brand" onClick={() => setSection("overview")}>{data.store.name}</button><div className="breadcrumb"><span>{data.store.name}</span><span className="crumb-sep">/</span><strong>{nav.find((item) => item.id === section)?.label ?? "Overview"}</strong></div><div className="topbar-right"><span className="today-label">{dateLabel}</span><ProfileMenu user={data.user} placement="topbar" onTeamClick={() => setSection("settings")} /></div></header>
-      <div className="content-wrap"><Notice success={data.success} error={data.error} />
+      <header className="topbar"><button className="mobile-brand" onClick={() => setSection("overview")}>{data.store.name}</button><div className="breadcrumb"><span>{data.store.name}</span><span className="crumb-sep">/</span><strong>{nav.find((item) => item.id === section)?.label ?? "Overview"}</strong></div><div className="topbar-right"><span className="today-label">{dateLabel}</span><InstallAppButton /><Link href="/offline" prefetch className="offline-counter-link"><FiSmartphone aria-hidden="true" /><span>Offline counter</span></Link><ProfileMenu user={data.user} placement="topbar" onTeamClick={() => setSection("settings")} /></div></header>
+      <div className="content-wrap"><Notice success={data.success} error={data.error} />{(!online || queuedSales > 0) && <aside className={`offline-app-banner ${online ? "is-connected" : "is-disconnected"}`}><span className="offline-banner-icon">{online ? <FiWifi aria-hidden="true" /> : <FiWifiOff aria-hidden="true" />}</span><div><strong>{online ? `${queuedSales} saved sale${queuedSales === 1 ? "" : "s"} need attention` : "You’re offline"}</strong><small>{online ? "Review and sync sales saved on this device." : "Checkout is saved on this device and syncs when the connection returns."}</small></div><Link href="/offline" prefetch className="offline-app-link">Open offline counter <FiSmartphone aria-hidden="true" /></Link>{online && retryableSales > 0 && <button type="button" className="offline-sync-button" onClick={() => void syncOfflineAndRefresh()}><FiRefreshCw aria-hidden="true" /> Sync</button>}</aside>}
 
         {section === "overview" && <>
           <section className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" /> DAILY SNAPSHOT</div><h1>Good day, {data.user.name.split(" ")[0]}<span className="heading-period">.</span></h1><p>Here&apos;s what&apos;s moving in your store today.</p></div></section>
@@ -117,15 +228,15 @@ export function StoreApp({ data }: { data: Props }) {
             <article className="panel activity-panel"><div className="panel-heading"><div><div className="section-kicker">RECENT ACTIVITY</div><h2>Today&apos;s movement</h2></div><button className="text-button" onClick={() => setSection("cashflow")}>See all </button></div>{data.recentSales.length === 0 && data.expenses.length === 0 && data.movements.length === 0 ? <div className="empty-state compact-empty"><span className="empty-icon"><FiActivity aria-hidden="true" /></span><strong>A fresh start</strong><span>Your sales and cash movements will show here.</span></div> : <div className="activity-list">{[...data.recentSales.map((item) => ({ id: item.id, title: `Sale · ${item.itemCount} item${item.itemCount === 1 ? "" : "s"}`, detail: item.methods.map(humanize).join(" + "), amount: item.totalCents, time: item.createdAt, kind: "sale" })), ...data.expenses.map((item) => ({ id: item.id, title: item.description, detail: item.category, amount: -item.amountCents, time: item.createdAt, kind: "expense" })), ...data.movements.map((item) => ({ id: item.id, title: item.reason, detail: humanize(item.kind), amount: item.kind === "CASH_IN" ? item.amountCents : -item.amountCents, time: item.createdAt, kind: "movement" }))].sort((a, b) => b.time.localeCompare(a.time)).slice(0, 6).map((item) => <div className="activity-item" key={item.id}><span className={`activity-glyph ${item.kind}`}>{item.kind === "sale" ? <FiShoppingCart aria-hidden="true" /> : item.amount > 0 ? <FiPlus aria-hidden="true" /> : <FiMinus aria-hidden="true" />}</span><div className="activity-copy"><strong>{item.title}</strong><small>{item.detail} · {fmtTime(item.time)}</small></div><b className={item.amount < 0 ? "negative" : ""}>{item.amount < 0 ? "−" : "+"}{formatMoney(Math.abs(item.amount), currency)}</b></div>)}</div>}</article>
           </section>
           <section className="panel home-products-panel"><div className="panel-heading"><div><div className="section-kicker">READY TO SELL</div><h2>Products and prices</h2></div><button className="text-button" onClick={() => setSection("checkout")}>Go to checkout</button></div>
-            {data.products.filter((product) => product.stock > 0).length === 0 ? <div className="home-products-empty"><span>No items ready to sell yet.</span><button className="text-button" onClick={() => setSection("inventory")}>Add products</button></div> : <div className="home-product-grid">{data.products.filter((product) => product.stock > 0).slice(0, 4).map((product) => <button className="home-product-card" key={product.id} onClick={() => { if (data.cashDay?.status === "OPEN") { updateCart(product.id, (cart[product.id] ?? 0) + 1); setSection("checkout"); } else { setSection("cashflow"); } }}><span className="home-product-category">{product.category}</span><strong className="home-product-name">{product.name}</strong><span className="home-product-stock">{product.stock} in stock</span><b className="home-product-price">{formatMoney(product.priceCents, currency)}</b><span className="home-product-action">{data.cashDay?.status === "OPEN" ? <><FiPlus aria-hidden="true" /> Add to sale</> : "Open drawer to sell"}</span></button>)}</div>}
+            {data.products.filter((product) => product.stock > 0).length === 0 ? <div className="home-products-empty"><span>No items ready to sell yet.</span><button className="text-button" onClick={() => setSection("inventory")}>Add products</button></div> : <div className="home-product-grid">{data.products.filter((product) => product.stock > 0).slice(0, 4).map((product) => <button className="home-product-card" key={product.id} onClick={() => { if (data.cashDay?.status === "OPEN") { updateCart(product.id, (cart[product.id] ?? 0) + 1); setSection("checkout"); } else { setSection("cashflow"); } }}><span className="home-product-category">{product.category}</span><strong className="home-product-name">{product.name}</strong><span className="home-product-stock">{product.stock - (offlineSold[product.id] ?? 0)} in stock</span><b className="home-product-price">{formatMoney(product.priceCents, currency)}</b><span className="home-product-action">{data.cashDay?.status === "OPEN" ? <><FiPlus aria-hidden="true" /> Add to sale</> : "Open drawer to sell"}</span></button>)}</div>}
           </section>
           <section className="panel tender-panel"><div className="panel-heading"><div><div className="section-kicker">PAYMENT MIX</div><h2>Where today&apos;s sales landed</h2></div><button className="text-button" onClick={() => setSection("cashflow")}>Cashflow details </button></div><div className="tender-grid"><div className="tender-tile"><span className="tender-icon cash-tender"><FiDollarSign aria-hidden="true" /></span><div><small>Cash</small><strong>{formatMoney(data.metrics.cashSales, currency)}</strong></div><span className="tender-share">{data.metrics.totalSales ? Math.round(data.metrics.cashSales / data.metrics.totalSales * 100) : 0}%</span></div><div className="tender-tile"><span className="tender-icon card-tender"><FiCreditCard aria-hidden="true" /></span><div><small>Card</small><strong>{formatMoney(data.metrics.cardSales, currency)}</strong></div><span className="tender-share">{data.metrics.totalSales ? Math.round(data.metrics.cardSales / data.metrics.totalSales * 100) : 0}%</span></div><div className="tender-tile"><span className="tender-icon bank-tender"><FiSmartphone aria-hidden="true" /></span><div><small>Bank / digital</small><strong>{formatMoney(data.metrics.bankSales, currency)}</strong></div><span className="tender-share">{data.metrics.totalSales ? Math.round(data.metrics.bankSales / data.metrics.totalSales * 100) : 0}%</span></div><div className="stock-alert-tile" onClick={() => setSection("inventory")} role="button" tabIndex={0}><span className="stock-alert-symbol"><FiAlertCircle aria-hidden="true" /></span><div><strong>{data.metrics.lowStockCount} items</strong><small>need a stock check</small></div></div></div></section>
         </>}
 
         {section === "checkout" && <>
           <section className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" /> COUNTER</div><h1>Make a sale<span className="heading-period">.</span></h1><p>Pick products, choose how they paid, and you&apos;re done.</p></div><div className={`shift-pill ${data.cashDay?.status === "OPEN" ? "shift-pill-open" : ""}`}><span />{data.cashDay?.status === "OPEN" ? "Drawer open" : "Drawer closed"}</div></section>
-          {!data.cashDay || data.cashDay.status !== "OPEN" ? <div className="shift-callout"><div className="shift-icon"><FiClock aria-hidden="true" /></div><div className="shift-copy"><strong>Open the cash drawer before starting a sale</strong><span>Set today&apos;s opening cash under Cashflow.</span></div><button className="button button-primary" onClick={() => setSection("cashflow")}>Open cash drawer </button></div> : <div className="checkout-layout"><section className="panel product-picker"><div className="panel-heading"><div><div className="section-kicker">PRODUCTS</div><h2>Choose items</h2></div><span className="muted-count">{data.products.filter((item) => item.stock > 0).length} available</span></div>{data.products.filter((item) => item.stock > 0).length === 0 ? <div className="empty-state"><span className="empty-icon"><FiPackage aria-hidden="true" /></span><strong>No stock available</strong><span>Add products or receive stock in Inventory.</span></div> : <div className="product-grid">{data.products.filter((item) => item.stock > 0).map((product) => <button type="button" className={`product-tile ${cart[product.id] ? "product-selected" : ""}`} key={product.id} onClick={() => updateCart(product.id, (cart[product.id] ?? 0) + 1)}><span className="product-tile-art">{product.name.slice(0, 1).toUpperCase()}</span><strong>{product.name}</strong><small>{product.sku} · {product.stock} in stock</small><b>{formatMoney(product.priceCents, currency)}</b>{cart[product.id] && <span className="product-quantity">{cart[product.id]}</span>}</button>)}</div>}</section>
-            <section className="panel cart-panel"><div className="panel-heading"><div><div className="section-kicker">CURRENT SALE</div><h2>Your basket</h2></div><span className="cart-count">{cartLines.reduce((sum, line) => sum + line.quantity, 0)}</span></div>{cartLines.length === 0 ? <div className="empty-state cart-empty"><span className="empty-icon"><FiShoppingCart aria-hidden="true" /></span><strong>Nothing here yet</strong><span>Choose products to get started.</span></div> : <><div className="cart-lines">{cartLines.map(({ product, quantity }) => <div className="cart-line" key={product.id}><span className="cart-product-mark">{product.name.slice(0, 1)}</span><div className="cart-product-info"><strong>{product.name}</strong><small>{formatMoney(product.priceCents, currency)} each</small></div><div className="quantity-control"><button type="button" onClick={() => updateCart(product.id, quantity - 1)} aria-label={`Remove one ${product.name}`}><FiMinus aria-hidden="true" /></button><b>{quantity}</b><button type="button" onClick={() => updateCart(product.id, quantity + 1)} aria-label={`Add one ${product.name}`}><FiPlus aria-hidden="true" /></button></div><strong className="cart-line-total">{formatMoney(product.priceCents * quantity, currency)}</strong></div>)}</div><div className="payment-fields"><div className="section-kicker">PAYMENT BREAKDOWN</div>{(["cash", "card", "bank"] as const).map((key) => <label className="payment-input-row" key={key}><span>{key === "bank" ? "Bank / digital" : humanize(key)}</span><div><span className="currency-hint">{currency}</span><input type="number" min="0" step={step} value={(payments[key] / factor).toFixed(digits)} onChange={(event) => setPayments((current) => ({ ...current, [key]: Math.round(Number(event.target.value || 0) * factor) }))} /></div></label>)}</div><div className="cart-total-row"><span>Total due</span><strong>{formatMoney(cartTotal, currency)}</strong></div><div className={`payment-match ${payments.cash + payments.card + payments.bank === cartTotal ? "match-ok" : "match-error"}`}>{payments.cash + payments.card + payments.bank === cartTotal ? <><FiCheck aria-hidden="true" /> Payment total matches</> : `Payment difference · ${formatMoney(Math.abs(cartTotal - payments.cash - payments.card - payments.bank), currency)}`}</div><form action={checkout}><input type="hidden" name="cart" value={JSON.stringify(cartLines.map((line) => ({ productId: line.product.id, quantity: line.quantity })))} /><input type="hidden" name="cash" value={(payments.cash / factor).toFixed(digits)} /><input type="hidden" name="card" value={(payments.card / factor).toFixed(digits)} /><input type="hidden" name="bank" value={(payments.bank / factor).toFixed(digits)} /><button className="button button-primary button-wide" disabled={!cartLines.length || payments.cash + payments.card + payments.bank !== cartTotal}>Complete sale </button></form></>}</section></div>}
+          {!data.cashDay || data.cashDay.status !== "OPEN" ? <div className="shift-callout"><div className="shift-icon"><FiClock aria-hidden="true" /></div><div className="shift-copy"><strong>Open the cash drawer before starting a sale</strong><span>Set today&apos;s opening cash under Cashflow.</span></div><button className="button button-primary" onClick={() => setSection("cashflow")}>Open cash drawer </button></div> : <div className="checkout-layout"><section className="panel product-picker"><div className="panel-heading"><div><div className="section-kicker">PRODUCTS</div><h2>Choose items</h2></div><span className="muted-count">{data.products.filter((item) => item.stock - (offlineSold[item.id] ?? 0) > 0).length} available</span></div>{data.products.filter((item) => item.stock - (offlineSold[item.id] ?? 0) > 0).length === 0 ? <div className="empty-state"><span className="empty-icon"><FiPackage aria-hidden="true" /></span><strong>No stock available</strong><span>Add products or receive stock in Inventory.</span></div> : <div className="product-grid">{data.products.filter((item) => item.stock - (offlineSold[item.id] ?? 0) > 0).map((product) => <button type="button" className={`product-tile ${cart[product.id] ? "product-selected" : ""}`} key={product.id} onClick={() => updateCart(product.id, (cart[product.id] ?? 0) + 1)}><span className="product-tile-art">{product.name.slice(0, 1).toUpperCase()}</span><strong>{product.name}</strong><small>{product.sku} · {product.stock - (offlineSold[product.id] ?? 0)} in stock</small><b>{formatMoney(product.priceCents, currency)}</b>{cart[product.id] && <span className="product-quantity">{cart[product.id]}</span>}</button>)}</div>}</section>
+            <section className="panel cart-panel"><div className="panel-heading"><div><div className="section-kicker">CURRENT SALE</div><h2>Your basket</h2></div><span className="cart-count">{cartLines.reduce((sum, line) => sum + line.quantity, 0)}</span></div>{cartLines.length === 0 ? <div className="empty-state cart-empty"><span className="empty-icon"><FiShoppingCart aria-hidden="true" /></span><strong>Nothing here yet</strong><span>Choose products to get started.</span></div> : <><div className="cart-lines">{cartLines.map(({ product, quantity }) => <div className="cart-line" key={product.id}><span className="cart-product-mark">{product.name.slice(0, 1)}</span><div className="cart-product-info"><strong>{product.name}</strong><small>{formatMoney(product.priceCents, currency)} each</small></div><div className="quantity-control"><button type="button" onClick={() => updateCart(product.id, quantity - 1)} aria-label={`Remove one ${product.name}`}><FiMinus aria-hidden="true" /></button><b>{quantity}</b><button type="button" onClick={() => updateCart(product.id, quantity + 1)} aria-label={`Add one ${product.name}`}><FiPlus aria-hidden="true" /></button></div><strong className="cart-line-total">{formatMoney(product.priceCents * quantity, currency)}</strong></div>)}</div><div className="payment-fields"><div className="section-kicker">PAYMENT BREAKDOWN</div>{(["cash", "card", "bank"] as const).map((key) => <label className="payment-input-row" key={key}><span>{key === "bank" ? "Bank / digital" : humanize(key)}</span><div><span className="currency-hint">{currency}</span><input type="number" min="0" step={step} value={(payments[key] / factor).toFixed(digits)} onChange={(event) => setPayments((current) => ({ ...current, [key]: Math.round(Number(event.target.value || 0) * factor) }))} /></div></label>)}</div><div className="cart-total-row"><span>Total due</span><strong>{formatMoney(cartTotal, currency)}</strong></div><div className={`payment-match ${payments.cash + payments.card + payments.bank === cartTotal ? "match-ok" : "match-error"}`}>{payments.cash + payments.card + payments.bank === cartTotal ? <><FiCheck aria-hidden="true" /> Payment total matches</> : `Payment difference · ${formatMoney(Math.abs(cartTotal - payments.cash - payments.card - payments.bank), currency)}`}</div>{checkoutMessage && <p className="offline-notice checkout-status-notice" role="status">{checkoutMessage}</p>}<form onSubmit={handleCheckoutSubmit}><input type="hidden" name="cart" value={JSON.stringify(cartLines.map((line) => ({ productId: line.product.id, quantity: line.quantity })))} /><input type="hidden" name="cash" value={(payments.cash / factor).toFixed(digits)} /><input type="hidden" name="card" value={(payments.card / factor).toFixed(digits)} /><input type="hidden" name="bank" value={(payments.bank / factor).toFixed(digits)} /><button className="button button-primary button-wide" disabled={!cartLines.length || payments.cash + payments.card + payments.bank !== cartTotal || checkoutBusy}>{checkoutBusy ? "Saving sale…" : online ? "Complete sale" : "Save sale offline"}</button></form></>}</section></div>}
         </>}
 
         {section === "inventory" && <>

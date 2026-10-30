@@ -154,9 +154,11 @@ model Sale {
   cashier       User        @relation(fields: [cashierId], references: [id])
   totalCents    Int
   businessDate  String
+  offlineId     String?
   createdAt     DateTime    @default(now())
   items         SaleItem[]
   payments      SalePayment[]
+  @@unique([storeId, offlineId])
   @@index([storeId, businessDate])
 }
 

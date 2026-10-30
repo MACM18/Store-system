@@ -1687,6 +1687,7 @@ export const SaleScalarFieldEnum = {
   cashierId: 'cashierId',
   totalCents: 'totalCents',
   businessDate: 'businessDate',
+  offlineId: 'offlineId',
   createdAt: 'createdAt'
 } as const
 

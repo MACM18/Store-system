@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "Store management",
+  "short_name": "Store",
+  "description": "Store checkout and daily operations",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7f1",
+  "theme_color": "#d4542f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

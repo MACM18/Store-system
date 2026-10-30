@@ -20,6 +20,10 @@ The first setup asks for the store name, ISO currency, store timezone, and owner
 
 Each signed-in device gets its own server-side session. Sessions expire after 14 days by default; set `SESSION_DAYS` between 1 and 60 to change that. Sessions use secure, HTTP-only cookies in production.
 
+## Install and offline checkout
+
+The app can be installed from a supported browser. On a device that will be used offline, open the app and the **Offline counter** once while connected so it can save that day’s product list and drawer status. Checkout sales can then be saved on the device without a connection and sync when the app is open again under the same account. Sales are checked against current prices, available inventory, and the drawer state when they sync; any mismatch stays on the device for review. Offline checkout needs an open drawer, and the store day, inventory, prices, expenses, and team settings still need a connection to change. Signing out clears the saved product list but keeps unsynced sales on the device until they can be synced by the account that recorded them.
+
 ## Team invitations and password resets
 
 Set `APP_URL` to the public app URL and configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` to enable email delivery. Invitations expire after 72 hours. Owner-triggered password reset links expire after one hour; setting a new password revokes that member’s existing device sessions. A failed email send invalidates its link and is reported in the owner team screen.

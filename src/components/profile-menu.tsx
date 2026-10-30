@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { logout } from "@/app/actions";
+import { clearOfflineSnapshot } from "@/lib/offline-store";
 import { FiLogOut, FiMoreHorizontal, FiShield, FiUsers } from "react-icons/fi";
 
 type ProfileMenuProps = {
@@ -14,8 +15,16 @@ const roleNames = { OWNER: "Owner", MANAGER: "Manager", CASHIER: "Cashier" };
 
 export function ProfileMenu({ user, placement, onTeamClick }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const logoutStartedRef = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const initials = user.name.trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1)).join("").toLocaleUpperCase();
+  function clearLocalDataBeforeLogout(event: FormEvent<HTMLFormElement>) {
+    if (logoutStartedRef.current) return;
+    event.preventDefault();
+    const form = event.currentTarget;
+    logoutStartedRef.current = true;
+    void clearOfflineSnapshot().catch(() => undefined).finally(() => form.requestSubmit());
+  }
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -41,7 +50,7 @@ export function ProfileMenu({ user, placement, onTeamClick }: ProfileMenuProps) 
       <div className="profile-popover-heading"><span className="profile-menu-avatar profile-popover-avatar">{initials}</span><div><strong>{user.name}</strong><small>{user.email}</small></div></div>
       <div className="profile-access-card"><span className="profile-access-icon"><FiShield aria-hidden="true" /></span><div><small>YOUR ACCESS</small><strong>{roleNames[user.role]}</strong></div><span className="profile-online-dot" /></div>
       {user.role === "OWNER" && <button type="button" role="menuitem" className="profile-menu-item" onClick={() => { setOpen(false); onTeamClick?.(); }}><FiUsers aria-hidden="true" /><span><strong>Team & devices</strong><small>People and signed-in devices</small></span></button>}
-      <form action={logout}><button type="submit" role="menuitem" className="profile-menu-signout"><FiLogOut aria-hidden="true" /><span>Sign out</span></button></form>
+      <form action={logout} onSubmit={clearLocalDataBeforeLogout}><button type="submit" role="menuitem" className="profile-menu-signout"><FiLogOut aria-hidden="true" /><span>Sign out</span></button></form>
     </section>}
   </div>;
 }
