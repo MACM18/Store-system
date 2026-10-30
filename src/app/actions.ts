@@ -9,7 +9,7 @@ import { planFifoConsumption } from "@/lib/inventory";
 import { parseMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
-const text = (form: FormData, key: string, max = 200) => String(form.get(key) ?? "").trim().slice(0, max);
+const text = (form: FormData, key: string, max = 200) => Array.from(String(form.get(key) ?? "").normalize("NFC").trim()).slice(0, max).join("");
 const integer = (form: FormData, key: string) => {
   const value = String(form.get(key) ?? "");
   if (!/^\d+$/.test(value)) return null;
