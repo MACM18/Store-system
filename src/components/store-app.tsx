@@ -18,7 +18,7 @@ type Product = { id: string; sku: string; name: string; category: string; priceC
 type Props = {
   store: { id: string; name: string; currency: string; timezone: string };
   user: { id: string; name: string; email: string; role: Role };
-  today: string; section: string; success?: string; error?: string;
+  today: string; section: string; success?: string; error?: string; mailCode?: string; mailStatus?: string;
   products: Product[];
   cashDay: { id: string; openingCash: number; countedCash: number | null; expectedCash: number | null; status: string; openedAt: string; closedAt: string | null } | null;
   metrics: { totalSales: number; totalExpenses: number; net: number; collectedToday: number; cashExpected: number; cashCounted: number | null; cashVariance: number | null; cashSales: number; cardSales: number; bankSales: number; debtSalesToday: number; debtCollectedToday: number; debtOutstanding: number; costOfGoods: number; grossProfit: number; lowStockCount: number; saleCount: number };
@@ -48,11 +48,34 @@ function humanize(value: string) { return value === "OWNER" ? "Admin" : value.to
 function normalizeSearch(value: string) { return value.normalize("NFC").toLocaleLowerCase(); }
 function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: string }) { return <span className={`badge badge-${tone}`}>{children}</span>; }
 
-function Notice({ success, error }: { success?: string; error?: string }) {
+function mailErrorMessage(error?: string, code?: string, status?: string) {
+  if (error !== "invite-email" && error !== "reset-email") return undefined;
+  const action = error === "invite-email" ? "Invitation" : "Password reset";
+  const statusText = /^5\d\d$/.test(status ?? "") ? ` · SMTP ${status}` : "";
+  const diagnostic = code ? ` (${code}${statusText})` : "";
+  const guidance: Record<string, string> = {
+    SMTP_CONFIG_MISSING: "Complete SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM in the app’s runtime settings.",
+    APP_URL_MISSING: "Set APP_URL to the public address of this app.",
+    EAUTH: "The mail server rejected the login. Check the SMTP username and password or app password.",
+    ETLS: "The secure connection could not be established. Check SMTP_SECURE and the port (465 for SSL, 587 for STARTTLS).",
+    EENVELOPE: "The mail server rejected the sender or recipient. Check SMTP_FROM and the destination address.",
+    EDNS: "The mail server hostname could not be found. Check SMTP_HOST.",
+    ECONNECTION: "The app could not connect to the mail server. Check SMTP_HOST, SMTP_PORT and outbound network access.",
+    ECONNREFUSED: "The mail server refused the connection. Check SMTP_HOST and SMTP_PORT.",
+    ECONNRESET: "The mail server closed the connection. Check the port and security mode.",
+    ETIMEDOUT: "The mail server did not respond in time. Check network access and SMTP host/port.",
+    ESOCKET: "The mail connection was interrupted. Check the SMTP host, port and security mode.",
+    EHOSTUNREACH: "The mail server cannot be reached from the app host. Check outbound network access.",
+  };
+  return `${action} email could not be sent${diagnostic}. ${guidance[code ?? ""] ?? "Check the app server log for the matching ‘Account email delivery failed’ entry."}`;
+}
+
+function Notice({ success, error, mailCode, mailStatus }: { success?: string; error?: string; mailCode?: string; mailStatus?: string }) {
   const messages: Record<string, string> = { product: "Add a valid name, SKU, buying price and selling price.", sku: "That SKU is already in use.", restock: "Stock could not be received. Check quantity and buying price, and make sure today’s drawer is open.", adjustment: "Stock was not changed. Check the quantity and reason.", checkout: "Sale could not be completed. Check payment totals and stock.", drawer: "Open today’s cash drawer before recording this expense or movement.", cart: "Your cart is empty or invalid.", expense: "Enter an expense category, description and amount.", opening: "Enter a valid opening cash amount.", count: "Enter the counted cash amount to close the day.", movement: "Open today’s drawer and enter a reason and amount.", "already-open": "Today’s drawer has already been opened.", user: "Enter a valid name, email and role.", email: "That email is already attached to a team member.", "invite-email": "The invitation email could not be sent. Check the outgoing mail settings and try again.", "reset-email": "The password reset email could not be sent. Check the outgoing mail settings and try again.", "reset-user": "Choose an active team member other than yourself.", role: "The role could not be changed. Refresh and try again.", "first-admin": "The original Admin account is protected and cannot be demoted.", "last-admin": "The last active Admin cannot be demoted.", "debt-payment": "The payment could not be added. Check the amount and remaining balance.", "debt-customer": "Enter the customer’s name.", "customer-exists": "That person is already in the debt book.", store: "Enter a store name and a valid time zone.", authorization: "Your role does not allow that action." };
   const successMessages: Record<string, string> = { product: "Product added to your inventory.", price: "Selling price updated.", restock: "New stock received and purchase recorded.", adjustment: "Stock count adjusted.", sale: "Sale completed and stock updated.", expense: "Expense added to today’s cashflow.", movement: "Cash movement recorded.", open: "Cash drawer opened for today.", closed: "Day closed. Your cash variance is ready to review.", invite: "Invitation sent. The link is valid for 72 hours.", "reset-sent": "Password reset link sent. It expires in 1 hour.", "role-updated": "Role updated. The team member has been signed out on all devices.", "debt-payment": "Debt payment recorded and balance updated.", "customer-added": "Customer added to the debt book.", store: "Store details updated." };
   if (!success && !error) return null;
-  return <div className={`notice ${error ? "notice-error" : "notice-success"}`} role="status">{error ? messages[error] ?? "Something needs attention. Please review the form." : successMessages[success!] ?? "Saved."}</div>;
+  const mailMessage = mailErrorMessage(error, mailCode, mailStatus);
+  return <div className={`notice ${error ? "notice-error" : "notice-success"}`} role="status">{error ? mailMessage ?? messages[error] ?? "Something needs attention. Please review the form." : successMessages[success!] ?? "Saved."}</div>;
 }
 
 export function StoreApp({ data }: { data: Props }) {
@@ -221,7 +244,7 @@ export function StoreApp({ data }: { data: Props }) {
 
     <main className="main-area">
       <header className="topbar"><button className="mobile-brand" onClick={() => setSection("overview")}>{data.store.name}</button><div className="breadcrumb"><span>{data.store.name}</span><span className="crumb-sep">/</span><strong>{nav.find((item) => item.id === section)?.label ?? "Overview"}</strong></div><div className="topbar-right"><span className="today-label">{dateLabel}</span><InstallAppButton /><Link href="/offline" prefetch className="offline-counter-link"><FiSmartphone aria-hidden="true" /><span>Offline counter</span></Link><ProfileMenu user={data.user} placement="topbar" onTeamClick={() => setSection("settings")} /></div></header>
-      <div className="content-wrap"><Notice success={data.success} error={data.error} />{(!online || queuedSales > 0) && <aside className={`offline-app-banner ${online ? "is-connected" : "is-disconnected"}`}><span className="offline-banner-icon">{online ? <FiWifi aria-hidden="true" /> : <FiWifiOff aria-hidden="true" />}</span><div><strong>{online ? `${queuedSales} saved sale${queuedSales === 1 ? "" : "s"} need attention` : "You’re offline"}</strong><small>{online ? "Review and sync sales saved on this device." : "Checkout is saved on this device and syncs when the connection returns."}</small></div><Link href="/offline" prefetch className="offline-app-link">Open offline counter <FiSmartphone aria-hidden="true" /></Link>{online && retryableSales > 0 && <button type="button" className="offline-sync-button" onClick={() => void syncOfflineAndRefresh()}><FiRefreshCw aria-hidden="true" /> Sync</button>}</aside>}
+      <div className="content-wrap"><Notice success={data.success} error={data.error} mailCode={data.mailCode} mailStatus={data.mailStatus} />{(!online || queuedSales > 0) && <aside className={`offline-app-banner ${online ? "is-connected" : "is-disconnected"}`}><span className="offline-banner-icon">{online ? <FiWifi aria-hidden="true" /> : <FiWifiOff aria-hidden="true" />}</span><div><strong>{online ? `${queuedSales} saved sale${queuedSales === 1 ? "" : "s"} need attention` : "You’re offline"}</strong><small>{online ? "Review and sync sales saved on this device." : "Checkout is saved on this device and syncs when the connection returns."}</small></div><Link href="/offline" prefetch className="offline-app-link">Open offline counter <FiSmartphone aria-hidden="true" /></Link>{online && retryableSales > 0 && <button type="button" className="offline-sync-button" onClick={() => void syncOfflineAndRefresh()}><FiRefreshCw aria-hidden="true" /> Sync</button>}</aside>}
 
         {section === "overview" && <>
           <section className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" /> DAILY SNAPSHOT</div><h1>Good day, {data.user.name.split(" ")[0]}<span className="heading-period">.</span></h1><p>Here&apos;s what&apos;s moving in your store today.</p></div></section>

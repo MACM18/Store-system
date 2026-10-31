@@ -9,6 +9,23 @@ type AccountEmail = {
   validFor: string;
 };
 
+export type MailFailure = { code: string; responseCode?: number };
+
+const knownCodes = new Set([
+  "SMTP_CONFIG_MISSING", "APP_URL_MISSING", "EAUTH", "ECONNECTION", "ECONNREFUSED",
+  "ECONNRESET", "ETIMEDOUT", "ESOCKET", "ETLS", "EDNS", "EENVELOPE",
+  "EMESSAGE", "EHOSTUNREACH",
+]);
+
+export function mailFailure(error: unknown): MailFailure {
+  const details = error && typeof error === "object" ? error as { code?: unknown; responseCode?: unknown } : {};
+  const rawCode = typeof details.code === "string" ? details.code.toUpperCase() : "";
+  const code = knownCodes.has(rawCode) ? rawCode : "UNKNOWN";
+  const responseCode = typeof details.responseCode === "number" && Number.isInteger(details.responseCode)
+    && details.responseCode >= 400 && details.responseCode <= 599 ? details.responseCode : undefined;
+  return { code, ...(responseCode ? { responseCode } : {}) };
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!);
 }
@@ -20,7 +37,9 @@ export async function sendAccountEmail({ to, recipientName, storeName, link, kin
   const pass = process.env.SMTP_PASSWORD;
   const from = process.env.SMTP_FROM;
   if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !user || !pass || !from) {
-    throw new Error("Email delivery is not configured");
+    const error = new Error("SMTP settings are incomplete") as Error & { code: string };
+    error.code = "SMTP_CONFIG_MISSING";
+    throw error;
   }
 
   const transport = nodemailer.createTransport({
@@ -28,6 +47,9 @@ export async function sendAccountEmail({ to, recipientName, storeName, link, kin
     port,
     secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465,
     auth: { user, pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
 
   const invite = kind === "invite";

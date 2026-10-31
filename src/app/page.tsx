@@ -7,13 +7,13 @@ import { StoreApp } from "@/components/store-app";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ section?: string; success?: string; error?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ section?: string; success?: string; error?: string; mailCode?: string; mailStatus?: string }> }) {
   const storeExists = await prisma.store.findFirst({ select: { id: true } });
   if (!storeExists) redirect("/setup");
   const session = await getCurrentSession();
   if (!session) redirect("/login");
 
-  const { section, success, error } = await searchParams;
+  const { section, success, error, mailCode, mailStatus } = await searchParams;
   const store = session.user.store;
   const today = businessDate(store.timezone);
   const weekStart = previousBusinessDate(today, 6);
@@ -55,7 +55,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   return <StoreApp data={{
     store: { id: store.id, name: store.name, currency: store.currency, timezone: store.timezone },
     user: { id: session.user.id, name: session.user.name, email: session.user.email, role: session.user.role },
-    today, section: section ?? "overview", success, error,
+    today, section: section ?? "overview", success, error, mailCode, mailStatus,
     products: products.map((item) => ({ ...item, createdAt: item.createdAt.toISOString(), updatedAt: item.updatedAt.toISOString() })),
     cashDay: cashDay ? { ...cashDay, openedAt: cashDay.openedAt.toISOString(), closedAt: cashDay.closedAt?.toISOString() ?? null } : null,
     metrics: { totalSales, totalExpenses, net: collectedToday + cashIn - totalExpenses - cashOut, collectedToday, cashExpected: expectedCash, cashCounted: cashDay?.countedCash ?? null, cashVariance: cashDay?.countedCash === null || cashDay?.countedCash === undefined ? null : cashDay.countedCash - (cashDay.expectedCash ?? expectedCash), cashSales: (paymentMap.CASH ?? 0) + (debtPaymentMap.CASH ?? 0), cardSales: (paymentMap.CARD ?? 0) + (debtPaymentMap.CARD ?? 0), bankSales: (paymentMap.BANK ?? 0) + (debtPaymentMap.BANK ?? 0), debtSalesToday, debtCollectedToday, debtOutstanding, costOfGoods, grossProfit: totalSales - costOfGoods, lowStockCount, saleCount: sales.length },

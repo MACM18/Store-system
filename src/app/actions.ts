@@ -9,7 +9,7 @@ import { expectedDrawerCash, paymentTotalMatches } from "@/lib/accounting";
 import { planFifoConsumption } from "@/lib/inventory";
 import { parseMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { sendAccountEmail } from "@/lib/mailer";
+import { mailFailure, sendAccountEmail } from "@/lib/mailer";
 
 const text = (form: FormData, key: string, max = 200) => Array.from(String(form.get(key) ?? "").normalize("NFC").trim()).slice(0, max).join("");
 const integer = (form: FormData, key: string) => {
@@ -332,7 +332,11 @@ const accountTokenHash = (token: string) => createHash("sha256").update(token).d
 
 function accountLink(token: string) {
   const configuredUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL;
-  if (!configuredUrl) throw new Error("APP_URL is not configured");
+  if (!configuredUrl) {
+    const error = new Error("APP_URL is not configured") as Error & { code: string };
+    error.code = "APP_URL_MISSING";
+    throw error;
+  }
   const url = new URL("/account/setup", configuredUrl);
   url.searchParams.set("token", token);
   return url.toString();
@@ -359,9 +363,13 @@ export async function inviteStaffUser(form: FormData) {
   } });
   try {
     await sendAccountEmail({ to: email, recipientName: name, storeName: session.user.store.name, link: accountLink(token), kind: "invite", validFor: "72 hours" });
-  } catch {
+  } catch (error) {
     await prisma.accountToken.update({ where: { id: invite.id }, data: { usedAt: new Date() } });
-    redirect("/?section=settings&error=invite-email");
+    const failure = mailFailure(error);
+    console.error("Account email delivery failed", { kind: "invite", ...failure });
+    const query = new URLSearchParams({ error: "invite-email", mailCode: failure.code });
+    if (failure.responseCode) query.set("mailStatus", String(failure.responseCode));
+    redirect(`/?section=settings&${query.toString()}`);
   }
   await prisma.accountToken.updateMany({ where: { id: { not: invite.id }, storeId: session.user.storeId, email, type: "INVITE", usedAt: null }, data: { usedAt: new Date() } });
   revalidatePath("/");
@@ -422,9 +430,13 @@ export async function sendStaffPasswordReset(form: FormData) {
   } });
   try {
     await sendAccountEmail({ to: user.email, recipientName: user.name, storeName: user.store.name, link: accountLink(token), kind: "password-reset", validFor: "1 hour" });
-  } catch {
+  } catch (error) {
     await prisma.accountToken.update({ where: { id: reset.id }, data: { usedAt: new Date() } });
-    redirect("/?section=settings&error=reset-email");
+    const failure = mailFailure(error);
+    console.error("Account email delivery failed", { kind: "password-reset", ...failure });
+    const query = new URLSearchParams({ error: "reset-email", mailCode: failure.code });
+    if (failure.responseCode) query.set("mailStatus", String(failure.responseCode));
+    redirect(`/?section=settings&${query.toString()}`);
   }
   await prisma.accountToken.updateMany({ where: { id: { not: reset.id }, userId: user.id, type: "PASSWORD_RESET", usedAt: null }, data: { usedAt: new Date() } });
   revalidatePath("/");
