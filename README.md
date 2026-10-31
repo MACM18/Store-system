@@ -26,7 +26,7 @@ The app can be installed from a supported browser. On a device that will be used
 
 ## Team invitations and password resets
 
-Set `APP_URL` to the public app URL and configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` to enable email delivery. Invitations expire after 72 hours. Owner-triggered password reset links expire after one hour; setting a new password revokes that member’s existing device sessions. A failed email send invalidates its link and is reported in the owner team screen.
+Set `APP_URL` to the public app URL and configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` (or `MAIL_FROM`) to enable email delivery. Invitations expire after 72 hours. Owner-triggered password reset links expire after one hour; setting a new password revokes that member’s existing device sessions. A failed email send invalidates its link and is reported in the owner team screen.
 
 ## Deployment to Dokploy
 

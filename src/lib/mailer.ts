@@ -9,7 +9,7 @@ type AccountEmail = {
   validFor: string;
 };
 
-export type MailFailure = { code: string; responseCode?: number };
+export type MailFailure = { code: string; responseCode?: number; missingSettings?: string[] };
 
 const knownCodes = new Set([
   "SMTP_CONFIG_MISSING", "APP_URL_MISSING", "EAUTH", "ECONNECTION", "ECONNREFUSED",
@@ -18,12 +18,16 @@ const knownCodes = new Set([
 ]);
 
 export function mailFailure(error: unknown): MailFailure {
-  const details = error && typeof error === "object" ? error as { code?: unknown; responseCode?: unknown } : {};
+  const details = error && typeof error === "object" ? error as { code?: unknown; responseCode?: unknown; missingSettings?: unknown } : {};
   const rawCode = typeof details.code === "string" ? details.code.toUpperCase() : "";
   const code = knownCodes.has(rawCode) ? rawCode : "UNKNOWN";
   const responseCode = typeof details.responseCode === "number" && Number.isInteger(details.responseCode)
     && details.responseCode >= 400 && details.responseCode <= 599 ? details.responseCode : undefined;
-  return { code, ...(responseCode ? { responseCode } : {}) };
+  const allowedSettings = new Set(["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM", "SMTP_FROM or MAIL_FROM"]);
+  const missingSettings = Array.isArray(details.missingSettings)
+    ? details.missingSettings.filter((setting): setting is string => typeof setting === "string" && allowedSettings.has(setting))
+    : [];
+  return { code, ...(responseCode ? { responseCode } : {}), ...(missingSettings.length ? { missingSettings } : {}) };
 }
 
 function escapeHtml(value: string) {
@@ -35,10 +39,18 @@ export async function sendAccountEmail({ to, recipientName, storeName, link, kin
   const port = Number(process.env.SMTP_PORT ?? 587);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
-  const from = process.env.SMTP_FROM;
-  if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !user || !pass || !from) {
-    const error = new Error("SMTP settings are incomplete") as Error & { code: string };
+  const from = process.env.SMTP_FROM ?? process.env.MAIL_FROM;
+  const missingSettings = [
+    ...(!host?.trim() ? ["SMTP_HOST"] : []),
+    ...(!Number.isInteger(port) || port < 1 || port > 65535 ? ["SMTP_PORT"] : []),
+    ...(!user?.trim() ? ["SMTP_USER"] : []),
+    ...(!pass ? ["SMTP_PASSWORD"] : []),
+    ...(!from?.trim() ? ["SMTP_FROM or MAIL_FROM"] : []),
+  ];
+  if (missingSettings.length) {
+    const error = new Error("SMTP settings are incomplete") as Error & { code: string; missingSettings: string[] };
     error.code = "SMTP_CONFIG_MISSING";
+    error.missingSettings = missingSettings;
     throw error;
   }
 

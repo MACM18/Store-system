@@ -369,6 +369,7 @@ export async function inviteStaffUser(form: FormData) {
     console.error("Account email delivery failed", { kind: "invite", ...failure });
     const query = new URLSearchParams({ error: "invite-email", mailCode: failure.code });
     if (failure.responseCode) query.set("mailStatus", String(failure.responseCode));
+    if (failure.missingSettings) query.set("mailMissing", failure.missingSettings.join(","));
     redirect(`/?section=settings&${query.toString()}`);
   }
   await prisma.accountToken.updateMany({ where: { id: { not: invite.id }, storeId: session.user.storeId, email, type: "INVITE", usedAt: null }, data: { usedAt: new Date() } });
@@ -436,6 +437,7 @@ export async function sendStaffPasswordReset(form: FormData) {
     console.error("Account email delivery failed", { kind: "password-reset", ...failure });
     const query = new URLSearchParams({ error: "reset-email", mailCode: failure.code });
     if (failure.responseCode) query.set("mailStatus", String(failure.responseCode));
+    if (failure.missingSettings) query.set("mailMissing", failure.missingSettings.join(","));
     redirect(`/?section=settings&${query.toString()}`);
   }
   await prisma.accountToken.updateMany({ where: { id: { not: reset.id }, userId: user.id, type: "PASSWORD_RESET", usedAt: null }, data: { usedAt: new Date() } });
