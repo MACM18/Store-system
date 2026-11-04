@@ -31,11 +31,11 @@ Set `APP_URL` to the public app URL and configure `SMTP_HOST`, `SMTP_PORT`, `SMT
 ## Deployment to Dokploy
 
 1. Create a Dokploy application that deploys the GHCR image `ghcr.io/macm18/store-system:latest`. Enable auto-deploy from its webhook and configure the private GHCR registry credentials if the package is private.
-2. Configure `DATABASE_URL` to the database service reachable from the application container, `SESSION_DAYS` if desired, `PORT=3000`, `APP_URL=https://shop.macm.dev`, and the SMTP settings listed above.
+2. Configure `DATABASE_URL` to the database service reachable from the application container, `SESSION_DAYS` if desired, `PORT=3000`, `APP_URL=https://shop.macm.dev`, `HEALTH_CHECK_TOKEN` with a private health-check bearer token, and the SMTP settings listed above.
 3. Add a GitHub Actions repository secret named `DOKPLOY_WEBHOOK_URL` containing the HTTPS deployment webhook URL.
 4. Push to `main` (or run the workflow manually). GitHub Actions builds and publishes the Docker image, then calls the checked-in Python webhook script.
 
-The container runs `prisma migrate deploy` before starting Next.js. `/api/health` returns HTTP 200 only when PostgreSQL is reachable, and returns 503 otherwise. Do not set a custom Dokploy start command.
+The container runs `prisma migrate deploy` before starting Next.js. `/api/health` requires `Authorization: Bearer <HEALTH_CHECK_TOKEN>` and returns HTTP 200 only when PostgreSQL is reachable. It returns 401 for an invalid token and 503 if the token is not configured or PostgreSQL is unavailable. Do not set a custom Dokploy start command.
 
 ## Money and inventory
 
